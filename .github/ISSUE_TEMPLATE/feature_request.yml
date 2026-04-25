@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a Solane Run improvement.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or user need does this solve?
+      placeholder: Freight operators need...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: Add...
+    validations:
+      required: true
+  - type: dropdown
+    id: data_scope
+    attributes:
+      label: Data scope
+      description: The beta should stay public-ESI-first.
+      options:
+        - Public ESI or SDE only
+        - Local calculation only
+        - Requires private ESI or auth
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Design references, edge cases, or EVE-specific constraints.

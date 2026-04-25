@@ -1,4 +1,5 @@
-import { useState, useTransition } from "react";
+import type { CSSProperties } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   ArrowRight,
   Boxes,
@@ -12,38 +13,22 @@ import {
 import { AppShell } from "./components/AppShell";
 import { DataPanel } from "./components/DataPanel";
 import { QuotePanel } from "./components/QuotePanel";
+import { SystemAutocomplete } from "./components/SystemAutocomplete";
 import { Button } from "./components/ui/Button";
-import { Input } from "./components/ui/Input";
 import { SegmentedControl } from "./components/ui/SegmentedControl";
-import { Select } from "./components/ui/Select";
-import { calculateQuote, commonSystems, fallbackRoute } from "./data/demo";
+import { COLLATERAL_VALUE, calculateQuote, cargoSizes, fallbackRoute, labelForSize, volumeForSize } from "./data/quote";
 import { fetchEsiRoute } from "./lib/api";
-import type { QuoteInput, QuoteResult, RouteMode } from "./types";
+import type { CargoSize, QuoteInput, QuoteResult, RouteSystem, SolarSystem } from "./types";
 
 const initialInput: QuoteInput = {
-  origin: "Jita",
-  destination: "Amarr",
-  routeMode: "secure",
-  volume: 320_000,
-  collateral: 1_600_000_000,
+  pickup: null,
+  destination: null,
+  size: "medium",
+  volume: volumeForSize("medium"),
+  collateral: COLLATERAL_VALUE,
 };
 
 const initialRoute = fallbackRoute(initialInput);
-
-const routeStops = [
-  { label: "", sec: "", x: 120, y: 190, tone: "high" },
-  { label: "Perimeter", sec: "1.0", x: 160, y: 214, tone: "high" },
-  { label: "Sobaseki", sec: "0.8", x: 246, y: 208, tone: "high" },
-  { label: "", sec: "", x: 304, y: 234, tone: "high" },
-  { label: "", sec: "", x: 360, y: 236, tone: "high" },
-  { label: "Uedama", sec: "0.5", x: 414, y: 228, tone: "low" },
-  { label: "", sec: "", x: 458, y: 260, tone: "low" },
-  { label: "Hek", sec: "0.5", x: 528, y: 282, tone: "low" },
-  { label: "Nakugard", sec: "0.4", x: 598, y: 318, tone: "low" },
-  { label: "", sec: "", x: 678, y: 354, tone: "low" },
-  { label: "Ashab", sec: "0.3", x: 708, y: 340, tone: "low" },
-  { label: "", sec: "", x: 774, y: 328, tone: "low" },
-] as const;
 
 const starField = [
   [18, 96, 0.7], [47, 308, 1.1], [73, 58, 0.6], [96, 246, 0.8], [128, 151, 0.5],
@@ -63,89 +48,100 @@ const starField = [
 function App() {
   const [input, setInput] = useState<QuoteInput>(initialInput);
   const [quote, setQuote] = useState<QuoteResult>(() => calculateQuote(initialInput, initialRoute));
-  const [message, setMessage] = useState("Local estimate ready. Sync public ESI when the API is running.");
+  const [message, setMessage] = useState("Select a pick up and destination to calculate the current ESI route.");
   const [isPending, startTransition] = useTransition();
+
+  const activeColor = input.pickup?.color ?? "#19a8ff";
+  const destinationColor = input.destination?.color ?? activeColor;
+  const activeService = input.pickup?.serviceType ?? "Solane";
+  const routeNodes = useMemo(() => buildRouteNodes(quote.route.routeSystems, input), [input, quote.route.routeSystems]);
+  const routePoints = useMemo(() => layoutRoutePoints(routeNodes.length), [routeNodes.length]);
+  const splitIndex = Math.max(0, Math.floor((routePoints.length - 1) / 2));
+  const routeServices = routeServiceLabels(input.pickup, input.destination);
+  const canCalculate = Boolean(input.pickup && input.destination) && !isPending;
 
   const updateInput = <K extends keyof QuoteInput>(key: K, value: QuoteInput[K]) => {
     const nextInput = { ...input, [key]: value };
     setInput(nextInput);
     setQuote(calculateQuote(nextInput, fallbackRoute(nextInput)));
-    setMessage("Quote refreshed locally. Use Calculate Run to request the current ESI route.");
+    setMessage(nextInput.pickup && nextInput.destination
+      ? "Route endpoints locked. Calculate Run will request the current ESI route."
+      : "Select a pick up and destination to calculate the current ESI route.");
+  };
+
+  const updateSize = (size: CargoSize) => {
+    const nextInput = {
+      ...input,
+      size,
+      volume: volumeForSize(size),
+      collateral: COLLATERAL_VALUE,
+    };
+    setInput(nextInput);
+    setQuote(calculateQuote(nextInput, fallbackRoute(nextInput)));
+    setMessage(nextInput.pickup && nextInput.destination
+      ? "Cargo size updated. Calculate Run will refresh the route estimate."
+      : "Select a pick up and destination to calculate the current ESI route.");
   };
 
   const calculateRun = () => {
+    if (!input.pickup || !input.destination) {
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const route = await fetchEsiRoute(input.origin, input.destination, input.routeMode);
+        const route = await fetchEsiRoute(input.pickup!.id, input.destination!.id);
         setQuote(calculateQuote(input, route));
-        setMessage("Public ESI route synced. Pricing rules are still beta and may change.");
+        setMessage("ESI route synced. Service color follows the selected pick up system.");
       } catch {
         const route = fallbackRoute(input);
         setQuote(calculateQuote(input, route));
-        setMessage("Public ESI is unavailable or could not resolve the systems. Local route estimate is active.");
+        setMessage("ESI is unavailable for this route right now. Endpoints are kept for the next sync.");
       }
     });
   };
 
   return (
-    <AppShell>
+    <AppShell accentColor={activeColor} destinationColor={destinationColor} serviceLabel={activeService}>
       <section className="mission-console" id="calculator" aria-label="Solane Run freight calculator">
         <DataPanel className="form-panel" eyebrow="Quote Input" title="Freight parameters">
           <div className="system-row">
-            <Select
-              label="Origin"
-              onChange={(event) => updateInput("origin", event.target.value)}
-              options={commonSystems.map((system) => ({
-                label: `${system.name} - ${system.region}`,
-                value: system.name,
-              }))}
-              value={input.origin}
+            <SystemAutocomplete
+              label="Pick Up"
+              onChange={(system) => updateInput("pickup", system)}
+              placeholder="Search a system"
+              value={input.pickup}
             />
             <ArrowRight aria-hidden="true" className="system-arrow" size={22} />
-            <Select
+            <SystemAutocomplete
               label="Destination"
-              onChange={(event) => updateInput("destination", event.target.value)}
-              options={commonSystems.map((system) => ({
-                label: `${system.name} - ${system.region}`,
-                value: system.name,
-              }))}
+              onChange={(system) => updateInput("destination", system)}
+              placeholder="Search a system"
               value={input.destination}
             />
           </div>
 
-          <SegmentedControl<RouteMode>
-            label="Route Mode"
-            onChange={(value) => updateInput("routeMode", value)}
-            options={[
-              { label: "Shortest", value: "shortest" },
-              { label: "Secure", value: "secure" },
-              { label: "Insecure", value: "insecure" },
-            ]}
-            value={input.routeMode}
+          <SegmentedControl<CargoSize>
+            label="Size"
+            onChange={updateSize}
+            options={cargoSizes.map((size) => ({ label: size.label, value: size.value }))}
+            value={input.size}
           />
 
-          <div className="metric-grid">
-            <Input
-              hint="m3"
-              label="Volume"
-              min={1}
-              onChange={(event) => updateInput("volume", Number(event.target.value))}
-              type="number"
-              value={input.volume}
-            />
-            <Input
-              hint="ISK"
-              label="Collateral"
-              min={0}
-              onChange={(event) => updateInput("collateral", Number(event.target.value))}
-              type="number"
-              value={input.collateral}
-            />
+          <div className="collateral-readout">
+            <span>Collateral</span>
+            <strong>5.00B ISK</strong>
+          </div>
+
+          <div className="service-color-card">
+            <span>Pickup Service</span>
+            <strong>{input.pickup ? input.pickup.serviceType : "Awaiting Pick Up"}</strong>
+            <i style={{ background: activeColor }} />
           </div>
 
           <Button
             className="calculate-run-button"
-            disabled={isPending}
+            disabled={!canCalculate}
             onClick={calculateRun}
           >
             {isPending ? "Calculating" : "Calculate Run"}
@@ -159,54 +155,29 @@ function App() {
             <h2 id="route-overview-title">Route Overview</h2>
           </div>
           <div className="route-visual">
-            <div className="route-legend" aria-label="Security legend">
-              <span>
-                <i className="legend-high" />
-                High Sec
-              </span>
-              <span>
-                <i className="legend-low" />
-                Low Sec
-              </span>
-              <span>
-                <i className="legend-null" />
-                Null Sec
-              </span>
+            <div className="route-service-chip" aria-label="Active pickup service">
+              {routeServices.map((service) => (
+                <span key={service.label}>
+                  <i style={{ background: service.color }} />
+                  {service.label}
+                </span>
+              ))}
             </div>
             <svg
-              aria-label={`${input.origin} to ${input.destination} public route map`}
+              aria-label="Route overview map"
               className="route-map"
               role="img"
               viewBox="0 0 900 430"
             >
               <defs>
                 <filter id="routeGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="2.2" result="blur" />
+                  <feGaussianBlur stdDeviation="1.8" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
-                <radialGradient id="nodeFill" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#eff8ff" />
-                  <stop offset="38%" stopColor="#60d7ff" />
-                  <stop offset="100%" stopColor="#0d3150" />
-                </radialGradient>
-                <radialGradient id="lowNodeFill" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#f4e8ff" />
-                  <stop offset="42%" stopColor="#a855f7" />
-                  <stop offset="100%" stopColor="#2d124d" />
-                </radialGradient>
               </defs>
-
-              <g className="map-grid-lines">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <line key={`v-${index}`} x1={104 + index * 104} x2={104 + index * 104} y1="0" y2="430" />
-                ))}
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <line key={`h-${index}`} x1="0" x2="900" y1={74 + index * 74} y2={74 + index * 74} />
-                ))}
-              </g>
 
               <g className="map-stars">
                 {starField.map(([x, y, r], index) => (
@@ -214,61 +185,26 @@ function App() {
                 ))}
               </g>
 
-              <path
-                className="route-arc route-arc-shadow route-arc-high"
-                d="M72 178 L120 190 L160 214 L246 208 L304 234 L360 236 L414 228"
-              />
-              <path
-                className="route-arc route-arc-shadow route-arc-low"
-                d="M414 228 L458 260 L528 282 L598 318 L678 354 L708 340 L774 328 L842 328"
-              />
-              <path
-                className="route-arc route-arc-high"
-                d="M72 178 L120 190 L160 214 L246 208 L304 234 L360 236 L414 228"
-              />
-              <path
-                className="route-arc route-arc-low"
-                d="M414 228 L458 260 L528 282 L598 318 L678 354 L708 340 L774 328 L842 328"
-              />
+              <polyline className="route-arc route-arc-shadow" points={pointsToString(routePoints.slice(0, splitIndex + 1))} />
+              <polyline className="route-arc route-arc-shadow destination-segment" points={pointsToString(routePoints.slice(splitIndex))} />
+              <polyline className="route-arc pickup-segment" points={pointsToString(routePoints.slice(0, splitIndex + 1))} />
+              <polyline className="route-arc destination-segment" points={pointsToString(routePoints.slice(splitIndex))} />
 
-              <g className="route-node route-node-major active" transform="translate(82 182)">
-                <circle r="15" />
-                <circle r="7" />
-                <text className="route-label route-label-major" x="-32" y="-34">
-                  {input.origin}
-                </text>
-                <text className="route-sec" x="34" y="-34">
-                  0.9
-                </text>
-              </g>
-
-              {routeStops.map((stop, index) => (
-                <g className={`route-node route-node-${stop.tone}`} key={`${stop.label || "hop"}-${index}`} transform={`translate(${stop.x} ${stop.y})`}>
-                  <circle r="9" />
-                  <circle r="4" />
-                  {stop.label ? (
-                    <>
-                      <text className="route-label" x={stop.tone === "low" ? -18 : -38} y={stop.tone === "low" ? -32 : 38}>
-                        {stop.label}
-                      </text>
-                      <text className="route-sec" x={stop.tone === "low" ? -10 : -20} y={stop.tone === "low" ? -14 : 58}>
-                        {stop.sec}
-                      </text>
-                    </>
-                  ) : null}
-                </g>
-              ))}
-
-              <g className="route-node route-node-major destination" transform="translate(842 328)">
-                <circle r="15" />
-                <circle r="7" />
-                <text className="route-label route-label-major" x="-50" y="-34">
-                  {input.destination}
-                </text>
-                <text className="route-sec" x="42" y="-34">
-                  0.5
-                </text>
-              </g>
+              {routeNodes.map((node, index) => {
+                const point = routePoints[index];
+                return (
+                  <RouteNode
+                    color={index <= splitIndex ? activeColor : destinationColor}
+                    destination={index === routeNodes.length - 1}
+                    key={`${node.id}-${index}`}
+                    label={node.name}
+                    major={index === 0 || index === routeNodes.length - 1}
+                    security={node.securityDisplay ?? undefined}
+                    x={point.x}
+                    y={point.y}
+                  />
+                );
+              })}
             </svg>
             <button className="view-map-button" type="button">
               View on Map
@@ -280,7 +216,7 @@ function App() {
             <div>
               <DatabaseZap size={18} />
               <span>Route Source</span>
-              <strong>{quote.route.source === "esi" ? "Public ESI" : "Local Estimate"}</strong>
+              <strong>{quote.route.source === "esi" ? "Public ESI" : "Awaiting Sync"}</strong>
             </div>
             <div>
               <PlaneTakeoff size={18} />
@@ -289,8 +225,8 @@ function App() {
             </div>
             <div>
               <Boxes size={18} />
-              <span>Cargo Class</span>
-              <strong>{input.volume > 500_000 ? "Freighter" : "DST / BR"}</strong>
+              <span>Size</span>
+              <strong>{labelForSize(input.size)}</strong>
             </div>
           </div>
         </section>
@@ -310,22 +246,110 @@ function App() {
         </div>
         <div>
           <ShieldCheck size={22} />
-          <span>Route Status</span>
-          <strong>{input.routeMode === "insecure" ? "Requires review" : "Clear"}</strong>
+          <span>Service</span>
+          <strong>{routeServices.map((service) => service.label).join(" / ")}</strong>
         </div>
         <div>
           <Boxes size={22} />
-          <span>Ship Class</span>
-          <strong>{input.volume > 500_000 ? "Freighter" : "DST / BR"}</strong>
+          <span>Size</span>
+          <strong>{labelForSize(input.size)}</strong>
         </div>
         <div>
           <Clock3 size={22} />
           <span>Transit Estimate</span>
-          <strong>{Math.max(2, Math.round(quote.route.jumps * 0.8))}h window</strong>
+          <strong>{quote.route.jumps > 0 ? `${Math.max(2, Math.round(quote.route.jumps * 0.8))}h window` : "Pending route"}</strong>
         </div>
       </section>
     </AppShell>
   );
+}
+
+function RouteNode({
+  color,
+  destination = false,
+  label,
+  major = false,
+  security,
+  x,
+  y,
+}: {
+  color: string;
+  destination?: boolean;
+  label: string;
+  major?: boolean;
+  security?: string;
+  x: number;
+  y: number;
+}) {
+  return (
+    <g
+      className={`route-node ${major ? "route-node-major" : ""} ${destination ? "destination" : ""}`}
+      style={{ "--node-accent": color } as CSSProperties}
+      transform={`translate(${x} ${y})`}
+    >
+      <circle r={major ? 14 : 9} />
+      <circle r={major ? 6.5 : 4} />
+      <text className={`route-label ${major ? "route-label-major" : ""}`} x={major ? (destination ? -78 : -34) : -22} y={major ? -34 : 30}>
+        {label}
+      </text>
+      {security ? (
+        <text className="route-sec" x={major ? (destination ? 20 : 36) : -10} y={major ? -34 : 46}>
+          {security}
+        </text>
+      ) : null}
+    </g>
+  );
+}
+
+function buildRouteNodes(routeSystems: RouteSystem[], input: QuoteInput) {
+  const endpoints = [input.pickup, input.destination].filter((system): system is SolarSystem => Boolean(system));
+  const source = routeSystems.length >= 2 ? routeSystems : endpoints;
+  if (source.length === 0) {
+    return [
+      { id: 0, name: "Pick Up", securityDisplay: null },
+      { id: 1, name: "Destination", securityDisplay: null },
+    ];
+  }
+
+  const targetCount = Math.min(10, Math.max(2, source.length));
+  const selected: RouteSystem[] = [];
+  for (let index = 0; index < targetCount; index += 1) {
+    const sourceIndex = Math.round((index * (source.length - 1)) / (targetCount - 1));
+    selected.push(source[sourceIndex]);
+  }
+
+  return selected.filter((system, index, systems) => index === 0 || system.id !== systems[index - 1].id);
+}
+
+function layoutRoutePoints(count: number) {
+  const total = Math.max(2, count);
+  return Array.from({ length: total }, (_, index) => {
+    const progress = total === 1 ? 0 : index / (total - 1);
+    return {
+      x: 72 + progress * 760,
+      y: 205 + Math.sin(progress * Math.PI * 1.45 - 0.35) * 52 + Math.sin(progress * Math.PI * 3.1) * 18,
+    };
+  });
+}
+
+function pointsToString(points: { x: number; y: number }[]) {
+  return points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+}
+
+function routeServiceLabels(pickup: SolarSystem | null, destination: SolarSystem | null) {
+  const pickupService = pickup?.serviceType ?? "No Pick Up";
+  const destinationService = destination?.serviceType ?? pickupService;
+  const pickupColor = pickup?.color ?? "#19a8ff";
+  const destinationColor = destination?.color ?? pickupColor;
+
+  if (pickupService === destinationService) {
+    return [{ label: pickupService, color: pickupColor }];
+  }
+
+  return [
+    { label: pickupService, color: pickupColor },
+    { label: destinationService, color: destinationColor },
+  ];
 }
 
 export default App;

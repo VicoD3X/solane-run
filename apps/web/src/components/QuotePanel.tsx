@@ -1,7 +1,8 @@
 import { CircleDollarSign, PackageCheck, Route } from "lucide-react";
 
 import type { QuoteInput, QuoteResult } from "../types";
-import { formatIsk, formatM3 } from "../lib/format";
+import { labelForSize } from "../data/quote";
+import { formatIsk } from "../lib/format";
 import { StatusBadge } from "./ui/StatusBadge";
 
 type QuotePanelProps = {
@@ -37,9 +38,9 @@ export function QuotePanel({ input, result, message }: QuotePanelProps) {
         <div>
           <span>
             <PackageCheck size={16} />
-            Volume
+            Size
           </span>
-          <strong>{formatM3(input.volume)}</strong>
+          <strong>{labelForSize(input.size)}</strong>
         </div>
         <div>
           <span>

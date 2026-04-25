@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.dependencies import get_esi_client
 from app.main import app
+from app.system_catalog import SystemCatalog, choose_route_flag
 
 
 class FakeEsiClient:
@@ -90,6 +91,17 @@ def test_route_rejects_invalid_flag() -> None:
     assert response.status_code == 422
 
 
+def test_route_defaults_to_secure() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            "/api/eve/route",
+            params={"originId": 30000142, "destinationId": 30002187},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["flag"] == "secure"
+
+
 def test_status() -> None:
     with TestClient(app) as client:
         response = client.get("/api/eve/status")
@@ -100,3 +112,61 @@ def test_status() -> None:
     assert body["server_version"] == "2938421"
     assert body["vip"] is False
     assert "fetched_at" in body
+
+
+def test_system_catalog_search_includes_supported_services() -> None:
+    with TestClient(app) as client:
+        jita = client.get("/api/eve/systems", params={"q": "Jita"}).json()
+        tama = client.get("/api/eve/systems", params={"q": "Tama"}).json()
+        thera = client.get("/api/eve/systems", params={"q": "Thera"}).json()
+        zarzakh = client.get("/api/eve/systems", params={"q": "Zarzakh"}).json()
+        niarja = client.get("/api/eve/systems", params={"q": "Niarja"}).json()
+
+    assert jita[0]["serviceType"] == "HighSec"
+    assert tama[0]["serviceType"] == "LowSec"
+    assert thera[0]["serviceType"] == "Thera"
+    assert zarzakh[0]["serviceType"] == "Zarzakh"
+    assert niarja[0]["serviceType"] == "Pochven"
+
+
+def test_system_catalog_search_excludes_nullsec_and_wormholes() -> None:
+    with TestClient(app) as client:
+        nullsec = client.get("/api/eve/systems", params={"q": "1DQ1-A"}).json()
+        wormhole = client.get("/api/eve/systems", params={"q": "J100001"}).json()
+
+    assert nullsec == []
+    assert wormhole == []
+
+
+def test_route_flag_policy() -> None:
+    assert choose_route_flag(30000142, 30002187) == "secure"
+    assert choose_route_flag(30002813, 30002718) == "shortest"
+    assert choose_route_flag(30003504, 30002702) == "shortest"
+
+
+@pytest.mark.asyncio
+async def test_catalog_refresh_keeps_cache_on_esi_failure() -> None:
+    catalog = SystemCatalog(
+        [
+            {
+                "id": 30000142,
+                "name": "Jita",
+                "securityStatus": 0.9,
+                "securityDisplay": "0.9",
+                "regionId": 10000002,
+                "regionName": "The Forge",
+                "constellationId": 20000020,
+                "serviceType": "HighSec",
+                "color": "#6FCF97",
+            }
+        ]
+    )
+
+    class FailingEsiClient:
+        async def systems(self) -> list[int]:
+            raise RuntimeError("ESI offline")
+
+    refreshed = await catalog.refresh_from_esi(FailingEsiClient())  # type: ignore[arg-type]
+
+    assert refreshed is False
+    assert catalog.search("Jita", 5)[0]["name"] == "Jita"

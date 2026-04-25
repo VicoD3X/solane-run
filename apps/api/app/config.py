@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+from pathlib import Path
 
 
 def _csv_env(name: str, default: str) -> list[str]:
@@ -17,6 +18,12 @@ class Settings:
         "SolaneRun/0.1 contact:ops@solanerun.local",
     )
     cors_origins: list[str] = None  # type: ignore[assignment]
+    system_catalog_cache_path: str = os.getenv(
+        "SYSTEM_CATALOG_CACHE_PATH",
+        str(Path(__file__).resolve().parents[1] / ".cache" / "system_catalog.json"),
+    )
+    system_catalog_refresh_seconds: int = int(os.getenv("SYSTEM_CATALOG_REFRESH_SECONDS", "86400"))
+    system_catalog_refresh_enabled: bool = os.getenv("SYSTEM_CATALOG_REFRESH_ENABLED", "true").lower() == "true"
 
     def __post_init__(self) -> None:
         object.__setattr__(

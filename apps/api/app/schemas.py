@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 RouteFlag = Literal["shortest", "secure", "insecure"]
+ServiceType = Literal["Pochven", "Thera", "HighSec", "LowSec", "Zarzakh"]
 
 
 class HealthResponse(BaseModel):
@@ -43,17 +44,38 @@ class EsiName(BaseModel):
     name: str
 
 
-class RouteResponse(BaseModel):
-    origin_id: int
-    destination_id: int
-    flag: RouteFlag
-    systems: list[int]
-    jumps: int
-
-
 class EsiStatusResponse(BaseModel):
     players: int
     server_version: str
     start_time: str
     vip: bool = False
     fetched_at: str
+
+
+class SolarSystemResponse(BaseModel):
+    id: int
+    name: str
+    securityStatus: float
+    securityDisplay: str
+    regionId: int
+    regionName: str
+    constellationId: int
+    serviceType: ServiceType
+    color: str
+
+
+class RouteSystemResponse(BaseModel):
+    id: int
+    name: str
+    securityDisplay: str | None = None
+    serviceType: str | None = None
+    color: str | None = None
+
+
+class RouteResponse(BaseModel):
+    origin_id: int
+    destination_id: int
+    flag: RouteFlag
+    systems: list[int]
+    routeSystems: list[RouteSystemResponse] = Field(default_factory=list)
+    jumps: int

@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..dependencies import get_esi_client
+from ..dependencies import get_esi_client, get_system_catalog
 from ..esi import EsiClient, EsiError
 from ..schemas import (
     EsiName,
@@ -13,7 +13,10 @@ from ..schemas import (
     ResolveNamesRequest,
     RouteFlag,
     RouteResponse,
+    RouteSystemResponse,
+    SolarSystemResponse,
 )
+from ..system_catalog import SystemCatalog, choose_route_flag
 
 router = APIRouter(prefix="/api/eve", tags=["eve"])
 
@@ -44,23 +47,35 @@ async def names(
         raise HTTPException(status_code=502, detail=exc.message) from exc
 
 
+@router.get("/systems", response_model=list[SolarSystemResponse])
+async def systems(
+    q: Annotated[str, Query(max_length=80)] = "",
+    limit: Annotated[int, Query(ge=1, le=50)] = 12,
+    catalog: SystemCatalog = Depends(get_system_catalog),
+) -> list[SolarSystemResponse]:
+    return [SolarSystemResponse.model_validate(system) for system in catalog.search(q, limit)]
+
+
 @router.get("/route", response_model=RouteResponse)
 async def route(
     origin_id: Annotated[int, Query(alias="originId", gt=0)],
     destination_id: Annotated[int, Query(alias="destinationId", gt=0)],
-    flag: RouteFlag = "shortest",
+    flag: RouteFlag | None = None,
     esi: EsiClient = Depends(get_esi_client),
 ) -> RouteResponse:
+    route_flag = flag or cast(RouteFlag, choose_route_flag(origin_id, destination_id))
     try:
-        systems = await esi.route(origin_id, destination_id, flag)
+        systems = await esi.route(origin_id, destination_id, route_flag)
     except EsiError as exc:
         raise HTTPException(status_code=502, detail=exc.message) from exc
+    route_systems = await _route_systems(systems, esi, get_system_catalog())
 
     return RouteResponse(
         origin_id=origin_id,
         destination_id=destination_id,
-        flag=flag,
+        flag=route_flag,
         systems=systems,
+        routeSystems=route_systems,
         jumps=max(len(systems) - 1, 0),
     )
 
@@ -79,3 +94,49 @@ async def status(esi: EsiClient = Depends(get_esi_client)) -> EsiStatusResponse:
         vip=payload.get("vip", False),
         fetched_at=datetime.now(UTC).isoformat(),
     )
+
+
+async def _route_systems(
+    system_ids: list[int],
+    esi: EsiClient,
+    catalog: SystemCatalog,
+) -> list[RouteSystemResponse]:
+    route_systems: list[RouteSystemResponse] = []
+    missing_ids: list[int] = []
+
+    for system_id in system_ids:
+        system = catalog.get(system_id)
+        if system:
+            route_systems.append(RouteSystemResponse.model_validate({
+                "id": system["id"],
+                "name": system["name"],
+                "securityDisplay": system["securityDisplay"],
+                "serviceType": system["serviceType"],
+                "color": system["color"],
+            }))
+        else:
+            missing_ids.append(system_id)
+
+    if not missing_ids:
+        return route_systems
+
+    missing_names: dict[int, str] = {}
+    try:
+        missing_names = {
+            item["id"]: item["name"]
+            for item in await esi.names(missing_ids[:1000])
+            if item.get("category") == "solar_system"
+        }
+    except EsiError:
+        missing_names = {}
+
+    known_by_id = {system.id: system for system in route_systems}
+    ordered: list[RouteSystemResponse] = []
+    for system_id in system_ids:
+        known = known_by_id.get(system_id)
+        if known:
+            ordered.append(known)
+        else:
+            ordered.append(RouteSystemResponse(id=system_id, name=missing_names.get(system_id, str(system_id))))
+
+    return ordered

@@ -20,13 +20,26 @@ try {
   await expect(desktop.getByText("History")).toHaveCount(0);
   await expect(desktop.getByText("Public-only ESI scope")).toHaveCount(0);
   await expect(desktop.getByText("Demo pricing model")).toHaveCount(0);
+  await expect(desktop.getByText("Route Mode")).toHaveCount(0);
+  await expect(desktop.getByRole("combobox", { name: "Pick Up" })).toHaveValue("");
+  await expect(desktop.getByRole("combobox", { name: "Destination" })).toHaveValue("");
+  await expect(desktop.getByLabel("Volume")).toHaveCount(0);
+  await expect(desktop.getByLabel("Collateral")).toHaveCount(0);
 
-  await desktop.getByLabel("Destination").selectOption("Dodixie");
-  await desktop.getByRole("button", { name: "Insecure" }).click();
-  await desktop.getByLabel("Volume").fill("520000");
-  await desktop.getByLabel("Collateral").fill("2200000000");
+  await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita");
+  await desktop.getByRole("option", { name: /Jita/i }).click();
+  await desktop.getByRole("combobox", { name: "Destination" }).fill("Amarr");
+  await desktop.getByRole("option", { name: /Amarr/i }).click();
+  const serviceAccent = await desktop.locator(".app-shell").evaluate((node) =>
+    getComputedStyle(node).getPropertyValue("--service-accent").trim(),
+  );
+  if (serviceAccent.toLowerCase() !== "#6fcf97") {
+    throw new Error(`Expected HighSec accent #6FCF97, got ${serviceAccent}`);
+  }
+  await desktop.getByRole("button", { name: "800,000 m3" }).click();
   await desktop.getByRole("button", { name: "Calculate Run" }).click();
-  await expect(desktop.getByText(/Public ESI route synced/i)).toBeVisible({ timeout: 15000 });
+  await expect(desktop.getByText(/ESI route synced/i)).toBeVisible({ timeout: 15000 });
+  await expect(desktop.locator(".collateral-readout").getByText("5.00B ISK")).toBeVisible();
   await desktop.getByRole("button", { name: /Saved Quotes/i }).click();
   await expect(desktop.getByRole("button", { name: /Saved Quotes: coming soon/i })).toContainText(
     /Coming soon/,
@@ -50,6 +63,7 @@ try {
   await expect(mobile.getByText("Freight parameters")).toBeVisible();
   await expect(mobile.getByText("Route Overview")).toBeVisible();
   await expect(mobile.getByText("Quote Summary")).toBeVisible();
+  await expect(mobile.getByRole("combobox", { name: "Pick Up" })).toHaveValue("");
 
   const mobileOverflow = await mobile.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

@@ -1,15 +1,38 @@
-export type RouteMode = "shortest" | "secure" | "insecure";
+export type ServiceType = "Pochven" | "Thera" | "HighSec" | "LowSec" | "Zarzakh";
+
+export type SolarSystem = {
+  id: number;
+  name: string;
+  securityStatus: number;
+  securityDisplay: string;
+  regionId: number;
+  regionName: string;
+  constellationId: number;
+  serviceType: ServiceType;
+  color: string;
+};
 
 export type QuoteInput = {
-  origin: string;
-  destination: string;
-  routeMode: RouteMode;
+  pickup: SolarSystem | null;
+  destination: SolarSystem | null;
+  size: CargoSize;
   volume: number;
   collateral: number;
 };
 
+export type CargoSize = "small" | "medium" | "freighter";
+
+export type RouteSystem = {
+  id: number;
+  name: string;
+  securityDisplay?: string | null;
+  serviceType?: string | null;
+  color?: string | null;
+};
+
 export type RouteResult = {
   systems: number[];
+  routeSystems: RouteSystem[];
   jumps: number;
   source: "esi" | "local";
 };

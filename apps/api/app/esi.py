@@ -69,6 +69,34 @@ class EsiClient:
             params={"datasource": settings.esi_datasource},
         )
 
+    async def systems(self) -> list[int]:
+        return await self._request(
+            "GET",
+            "/universe/systems/",
+            params={"datasource": settings.esi_datasource},
+        )
+
+    async def system(self, system_id: int) -> dict[str, Any]:
+        return await self._request(
+            "GET",
+            f"/universe/systems/{system_id}/",
+            params={"datasource": settings.esi_datasource},
+        )
+
+    async def constellation(self, constellation_id: int) -> dict[str, Any]:
+        return await self._request(
+            "GET",
+            f"/universe/constellations/{constellation_id}/",
+            params={"datasource": settings.esi_datasource},
+        )
+
+    async def region(self, region_id: int) -> dict[str, Any]:
+        return await self._request(
+            "GET",
+            f"/universe/regions/{region_id}/",
+            params={"datasource": settings.esi_datasource},
+        )
+
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         if self._client is None:
             self._client = self._build_client()

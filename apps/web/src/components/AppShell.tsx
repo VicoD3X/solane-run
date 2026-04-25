@@ -1,19 +1,30 @@
 import { Activity, Bookmark, Calculator, RadioTower, Settings } from "lucide-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { fetchEsiStatus, type EsiStatus } from "../lib/api";
 import { StatusBadge } from "./ui/StatusBadge";
 
 type AppShellProps = {
+  accentColor?: string;
   children: ReactNode;
+  destinationColor?: string;
+  serviceLabel?: string;
 };
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ accentColor = "#19a8ff", children, destinationColor = accentColor, serviceLabel }: AppShellProps) {
   const { status, healthy, eveTime } = useTranquilityStatus();
+  const accentRgb = hexToRgb(accentColor);
+  const destinationRgb = hexToRgb(destinationColor);
+  const shellStyle = {
+    "--service-accent": accentColor,
+    "--service-accent-rgb": accentRgb,
+    "--destination-accent": destinationColor,
+    "--destination-accent-rgb": destinationRgb,
+  } as CSSProperties;
 
   return (
-    <div className="app-shell min-h-screen">
+    <div className="app-shell min-h-screen" data-service={serviceLabel ?? "Solane"} style={shellStyle}>
       <header className="topbar">
         <a aria-label="Solane Run dashboard" className="brand" href="/">
           <img alt="" src="/assets/logo-detoure.png" />
@@ -146,4 +157,13 @@ function ComingSoonAction({ icon, label }: { icon: ReactNode; label: string }) {
       <span>{display || " "}</span>
     </button>
   );
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace("#", "");
+  const bigint = Number.parseInt(normalized, 16);
+  const red = (bigint >> 16) & 255;
+  const green = (bigint >> 8) & 255;
+  const blue = bigint & 255;
+  return `${red}, ${green}, ${blue}`;
 }

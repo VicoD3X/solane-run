@@ -1,6 +1,6 @@
 # Solane Run
 
-Solane Run is a premium EVE Online freight calculator foundation. This repository starts with a separate React frontend, a FastAPI backend, public-only ESI integration, and Docker scaffolding ready for a future Hetzner VPS deployment.
+Solane Run is a premium EVE Online freight calculator foundation. This repository starts with a separate React frontend, a FastAPI backend, public ESI integration, an official SDE system catalog, and Docker scaffolding ready for a future Hetzner VPS deployment.
 
 ## Project Layout
 
@@ -44,6 +44,12 @@ npm run test:api
 docker compose -f infra/docker-compose.yml config
 ```
 
+Regenerate the static system seed from the latest official SDE JSONL package:
+
+```powershell
+py apps/api/scripts/build_system_seed.py
+```
+
 ## ESI Scope
 
-This foundation intentionally uses public ESI only: universe names, universe IDs, stations, systems, and route calculation. EVE SSO and private structure reads are out of scope for this phase.
+This foundation intentionally uses public data only: official SDE for the selectable system catalog, ESI for route calculation and Tranquility status, and a 24h backend refresh loop for catalog changes. EVE SSO and private structure reads are out of scope for this phase.

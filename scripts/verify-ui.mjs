@@ -9,10 +9,17 @@ try {
   await desktop.goto(baseUrl, { waitUntil: "networkidle" });
   await desktop.evaluate(() => document.fonts.ready);
 
+  await expect(desktop).toHaveTitle("Solane Run");
   await expect(desktop.getByRole("link", { name: "Solane Run dashboard" })).toBeVisible();
   await expect(desktop.getByText("Freight parameters")).toBeVisible();
   await expect(desktop.getByText("Route Overview")).toBeVisible();
   await expect(desktop.getByText("Quote Summary")).toBeVisible();
+  await expect(desktop.getByText("BETA")).toBeVisible();
+  await expect(desktop.getByText(/pilots/i)).toBeVisible({ timeout: 15000 });
+  await expect(desktop.getByText("Public ESI Route")).toHaveCount(0);
+  await expect(desktop.getByText("History")).toHaveCount(0);
+  await expect(desktop.getByText("Public-only ESI scope")).toHaveCount(0);
+  await expect(desktop.getByText("Demo pricing model")).toHaveCount(0);
 
   await desktop.getByLabel("Destination").selectOption("Dodixie");
   await desktop.getByRole("button", { name: "Insecure" }).click();
@@ -24,6 +31,9 @@ try {
   await expect(desktop.getByRole("button", { name: /Saved Quotes: coming soon/i })).toContainText(
     /Coming soon/,
   );
+  await expect(desktop.getByRole("button", { name: /Saved Quotes/i })).toContainText(/Saved Quotes/, {
+    timeout: 3000,
+  });
 
   const desktopOverflow = await desktop.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

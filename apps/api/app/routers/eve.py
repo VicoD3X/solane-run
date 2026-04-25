@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +8,7 @@ from ..esi import EsiClient, EsiError
 from ..schemas import (
     EsiName,
     EsiResolvedNamesResponse,
+    EsiStatusResponse,
     NamesRequest,
     ResolveNamesRequest,
     RouteFlag,
@@ -60,4 +62,20 @@ async def route(
         flag=flag,
         systems=systems,
         jumps=max(len(systems) - 1, 0),
+    )
+
+
+@router.get("/status", response_model=EsiStatusResponse)
+async def status(esi: EsiClient = Depends(get_esi_client)) -> EsiStatusResponse:
+    try:
+        payload = await esi.status()
+    except EsiError as exc:
+        raise HTTPException(status_code=502, detail=exc.message) from exc
+
+    return EsiStatusResponse(
+        players=payload["players"],
+        server_version=payload["server_version"],
+        start_time=payload["start_time"],
+        vip=payload.get("vip", False),
+        fetched_at=datetime.now(UTC).isoformat(),
     )

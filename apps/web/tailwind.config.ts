@@ -16,7 +16,7 @@ export default {
         steel: "#8ba5bc",
         ion: "#19a8ff",
         plasma: "#60d7ff",
-        amber: "#f7b84b",
+        amber: "#a855f7",
       },
       boxShadow: {
         panel: "0 24px 80px rgba(0, 0, 0, 0.34)",

@@ -25,6 +25,14 @@ class FakeEsiClient:
         assert flag == "secure"
         return [30000142, 30000144, 30002187]
 
+    async def status(self) -> dict:
+        return {
+            "players": 22144,
+            "server_version": "2938421",
+            "start_time": "2026-04-25T11:00:00Z",
+            "vip": False,
+        }
+
 
 async def override_esi_client():
     yield FakeEsiClient()
@@ -80,3 +88,15 @@ def test_route_rejects_invalid_flag() -> None:
         )
 
     assert response.status_code == 422
+
+
+def test_status() -> None:
+    with TestClient(app) as client:
+        response = client.get("/api/eve/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["players"] == 22144
+    assert body["server_version"] == "2938421"
+    assert body["vip"] is False
+    assert "fetched_at" in body

@@ -12,6 +12,14 @@ type RouteResponse = {
   jumps: number;
 };
 
+export type EsiStatus = {
+  players: number;
+  server_version: string;
+  start_time: string;
+  vip: boolean;
+  fetched_at: string;
+};
+
 export async function fetchEsiRoute(
   origin: string,
   destination: string,
@@ -40,6 +48,10 @@ export async function fetchEsiRoute(
     systems: route.systems,
     jumps: route.jumps,
   };
+}
+
+export async function fetchEsiStatus(): Promise<EsiStatus> {
+  return getJson<EsiStatus>("/api/eve/status");
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {

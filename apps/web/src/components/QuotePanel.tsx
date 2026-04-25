@@ -1,25 +1,22 @@
-import { CircleDollarSign, Loader2, PackageCheck, Route, ScanLine } from "lucide-react";
+import { CircleDollarSign, PackageCheck, Route } from "lucide-react";
 
 import type { QuoteInput, QuoteResult } from "../types";
 import { formatIsk, formatM3 } from "../lib/format";
-import { Button } from "./ui/Button";
 import { StatusBadge } from "./ui/StatusBadge";
 
 type QuotePanelProps = {
   input: QuoteInput;
   result: QuoteResult;
-  loading: boolean;
   message: string;
-  onCalculate: () => void;
 };
 
-export function QuotePanel({ input, result, loading, message, onCalculate }: QuotePanelProps) {
+export function QuotePanel({ input, result, message }: QuotePanelProps) {
   return (
     <aside className="quote-panel" id="pricing">
       <div className="quote-head">
         <strong>Quote Summary</strong>
         <StatusBadge tone={result.route.source === "esi" ? "green" : "amber"}>
-          {result.route.source === "esi" ? "ESI synced" : "Demo route"}
+          {result.route.source === "esi" ? "ESI synced" : "Local route"}
         </StatusBadge>
       </div>
 
@@ -64,14 +61,7 @@ export function QuotePanel({ input, result, loading, message, onCalculate }: Quo
         <strong>{formatIsk(result.riskFee)}</strong>
       </div>
 
-      <Button
-        className="estimate-button"
-        disabled={loading}
-        icon={loading ? <Loader2 className="spin" size={18} /> : <ScanLine size={18} />}
-        onClick={onCalculate}
-      >
-        {loading ? "Calculating" : "Calculate Run"}
-      </Button>
+      <div className="quote-panel-reserve" aria-hidden="true" />
     </aside>
   );
 }

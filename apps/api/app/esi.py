@@ -62,6 +62,13 @@ class EsiClient:
             params={"datasource": settings.esi_datasource, "flag": flag},
         )
 
+    async def status(self) -> dict[str, Any]:
+        return await self._request(
+            "GET",
+            "/status/",
+            params={"datasource": settings.esi_datasource},
+        )
+
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         if self._client is None:
             self._client = self._build_client()

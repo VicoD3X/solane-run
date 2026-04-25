@@ -11,7 +11,7 @@ export type QuoteInput = {
 export type RouteResult = {
   systems: number[];
   jumps: number;
-  source: "esi" | "demo";
+  source: "esi" | "local";
 };
 
 export type QuoteResult = {

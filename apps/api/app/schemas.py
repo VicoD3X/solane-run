@@ -49,3 +49,11 @@ class RouteResponse(BaseModel):
     flag: RouteFlag
     systems: list[int]
     jumps: int
+
+
+class EsiStatusResponse(BaseModel):
+    players: int
+    server_version: str
+    start_time: str
+    vip: bool = False
+    fetched_at: str

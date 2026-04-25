@@ -18,7 +18,7 @@ export function fallbackRoute(input: QuoteInput): RouteResult {
   const originId = findKnownSystemId(input.origin) ?? commonSystems[0].id;
   const destinationId = findKnownSystemId(input.destination) ?? commonSystems[1].id;
   return {
-    source: "demo",
+    source: "local",
     systems: [originId, destinationId],
     jumps: fallbackJumps[input.routeMode],
   };

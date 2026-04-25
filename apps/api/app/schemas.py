@@ -1,0 +1,51 @@
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+
+RouteFlag = Literal["shortest", "secure", "insecure"]
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+
+
+class ResolveNamesRequest(BaseModel):
+    names: list[str] = Field(..., min_length=1, max_length=500)
+
+
+class NamesRequest(BaseModel):
+    ids: list[int] = Field(..., min_length=1, max_length=1000)
+
+
+class EsiResolvedGroup(BaseModel):
+    id: int
+    name: str
+
+
+class EsiResolvedNamesResponse(BaseModel):
+    agents: list[EsiResolvedGroup] = []
+    alliances: list[EsiResolvedGroup] = []
+    characters: list[EsiResolvedGroup] = []
+    constellations: list[EsiResolvedGroup] = []
+    corporations: list[EsiResolvedGroup] = []
+    factions: list[EsiResolvedGroup] = []
+    inventory_types: list[EsiResolvedGroup] = []
+    regions: list[EsiResolvedGroup] = []
+    stations: list[EsiResolvedGroup] = []
+    systems: list[EsiResolvedGroup] = []
+
+
+class EsiName(BaseModel):
+    category: str
+    id: int
+    name: str
+
+
+class RouteResponse(BaseModel):
+    origin_id: int
+    destination_id: int
+    flag: RouteFlag
+    systems: list[int]
+    jumps: int

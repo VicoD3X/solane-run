@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/VicoD3X/solane-run.app/actions/workflows/ci.yml">
-    <img alt="CI" src="https://github.com/VicoD3X/solane-run.app/actions/workflows/ci.yml/badge.svg" />
+  <a href="https://github.com/VicoD3X/solane-run/actions/workflows/ci.yml">
+    <img alt="CI" src="https://github.com/VicoD3X/solane-run/actions/workflows/ci.yml/badge.svg" />
   </a>
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=0b1220" />
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" />

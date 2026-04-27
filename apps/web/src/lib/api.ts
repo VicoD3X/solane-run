@@ -1,10 +1,11 @@
-import type { RouteResult, SolarSystem } from "../types";
+import type { ContractAcceptanceSummary, RouteResult, SolarSystem } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001";
 
 type RouteResponse = {
   systems: number[];
   routeSystems: RouteResult["routeSystems"];
+  routeTraffic?: RouteResult["routeTraffic"];
   jumps: number;
 };
 
@@ -35,12 +36,17 @@ export async function fetchEsiRoute(originId: number, destinationId: number): Pr
     source: "esi",
     systems: route.systems,
     routeSystems: route.routeSystems,
+    routeTraffic: route.routeTraffic,
     jumps: route.jumps,
   };
 }
 
 export async function fetchEsiStatus(): Promise<EsiStatus> {
   return getJson<EsiStatus>("/api/eve/status");
+}
+
+export async function fetchContractAcceptance(): Promise<ContractAcceptanceSummary> {
+  return getJson<ContractAcceptanceSummary>("/api/solane/contract-acceptance");
 }
 
 async function getJson<T>(path: string): Promise<T> {

@@ -34,9 +34,29 @@ export type RouteSystem = {
   shipJumpsLastHour?: number | null;
 };
 
+export type RouteTrafficSummary = {
+  totalShipJumpsLastHour: number | null;
+  knownSystems: number;
+  totalSystems: number;
+  coverage: number;
+  level: "clear" | "active" | "busy" | "heavy" | "unavailable";
+  label: "Clear" | "Active" | "Busy" | "Heavy" | "Unavailable";
+};
+
+export type ContractAcceptanceLevel = "express" | "fast" | "normal" | "slower" | "extended" | "syncing";
+
+export type ContractAcceptanceSummary = {
+  level: ContractAcceptanceLevel;
+  label: "Express" | "Fast" | "Normal" | "Slower" | "Extended" | "Syncing";
+  lastSyncedAt: string | null;
+  isFresh: boolean;
+  source: "corp-contracts" | "syncing";
+};
+
 export type RouteResult = {
   systems: number[];
   routeSystems: RouteSystem[];
+  routeTraffic?: RouteTrafficSummary | null;
   jumps: number;
   source: "esi" | "local";
 };

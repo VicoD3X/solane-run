@@ -1,9 +1,17 @@
-import type { CSSProperties } from "react";
-import { Activity, Shield } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import { Clock3, Radar, Shield, Waypoints } from "lucide-react";
 
-import type { QuoteInput, RouteResult, RouteSystem, SolarSystem } from "../types";
+import type {
+  ContractAcceptanceSummary,
+  QuoteInput,
+  RouteResult,
+  RouteSystem,
+  RouteTrafficSummary,
+  SolarSystem,
+} from "../types";
 
 type RouteOverviewProps = {
+  acceptance: ContractAcceptanceSummary;
   closing?: boolean;
   input: QuoteInput;
   route: RouteResult;
@@ -11,8 +19,9 @@ type RouteOverviewProps = {
 
 const fallbackColor = "#8393a3";
 
-export function RouteOverview({ closing = false, input, route }: RouteOverviewProps) {
+export function RouteOverview({ acceptance, closing = false, input, route }: RouteOverviewProps) {
   const systems = route.routeSystems.length > 0 ? route.routeSystems : fallbackSystems(input);
+  const routeTraffic = route.routeTraffic ?? routeTrafficFromSystems(systems);
   const routeLabel = input.pickup && input.destination
     ? `${input.pickup.name} - ${input.destination.name}`
     : "Awaiting endpoints";
@@ -29,11 +38,29 @@ export function RouteOverview({ closing = false, input, route }: RouteOverviewPr
           <span>Road Overview</span>
           <h2 id="road-overview-title">{routeLabel}</h2>
         </div>
-        <strong>
-          <Activity size={15} />
-          Total jumps: {route.jumps}
-        </strong>
+        <div className="road-jump-metric" aria-label={`${route.jumps} total jumps`}>
+          <Waypoints size={17} />
+          <span>Total jumps</span>
+          <strong>{route.jumps}</strong>
+        </div>
       </header>
+
+      <div className="road-intel-grid" aria-label="Route intelligence">
+        <RoadIntelMetric
+          detail={trafficDetail(routeTraffic)}
+          icon={<Radar size={15} />}
+          tone={`road-traffic-${routeTraffic.level}`}
+          label="Route Traffic"
+          value={routeTraffic.label}
+        />
+        <RoadIntelMetric
+          detail={acceptanceDetail(acceptance)}
+          icon={<Clock3 size={15} />}
+          tone={`road-acceptance-${acceptance.level}`}
+          label="Contract Acceptance"
+          value={acceptance.label}
+        />
+      </div>
 
       <div className="road-overview-strip" aria-label="Route security timeline">
         {systems.map((system, index) => (
@@ -64,6 +91,31 @@ export function RouteOverview({ closing = false, input, route }: RouteOverviewPr
   );
 }
 
+function RoadIntelMetric({
+  detail,
+  icon,
+  label,
+  tone,
+  value,
+}: {
+  detail: string;
+  icon: ReactNode;
+  label: string;
+  tone?: string;
+  value: string;
+}) {
+  return (
+    <div className={`road-intel-card ${tone ?? ""}`}>
+      <span>
+        {icon}
+        <b>{label}</b>
+      </span>
+      <strong>{value}</strong>
+      <small>{detail}</small>
+    </div>
+  );
+}
+
 function RouteCell({ index, system, total }: { index: number; system: RouteSystem; total: number }) {
   const color = system.color ?? fallbackColor;
   const service = system.serviceType ?? "Unknown";
@@ -85,7 +137,6 @@ function RouteCell({ index, system, total }: { index: number; system: RouteSyste
       <span className="road-system-tooltip" role="tooltip">
         <strong>{system.name}</strong>
         <span>Security {security}</span>
-        <span>{service}</span>
         <span>{traffic}</span>
       </span>
     </button>
@@ -120,6 +171,64 @@ function trafficLabel(shipJumpsLastHour: number | null | undefined) {
     return "Traffic unavailable";
   }
   return `${shipJumpsLastHour.toLocaleString("en-US")} jumps last hour`;
+}
+
+function trafficDetail(traffic: RouteTrafficSummary) {
+  if (traffic.totalShipJumpsLastHour === null) {
+    return "Traffic unavailable";
+  }
+
+  const partial = traffic.coverage > 0 && traffic.coverage < 1 ? " - partial" : "";
+  return `${traffic.totalShipJumpsLastHour.toLocaleString("en-US")} jumps last hour${partial}`;
+}
+
+function acceptanceDetail(acceptance: ContractAcceptanceSummary) {
+  return acceptance.isFresh && acceptance.source === "corp-contracts"
+    ? "Corp queue synced"
+    : "Corp queue syncing";
+}
+
+function routeTrafficFromSystems(systems: RouteSystem[]): RouteTrafficSummary {
+  const knownCounts = systems
+    .map((system) => system.shipJumpsLastHour)
+    .filter((value): value is number => value !== null && value !== undefined);
+  const totalSystems = systems.length;
+  const knownSystems = knownCounts.length;
+
+  if (totalSystems === 0 || knownSystems === 0) {
+    return {
+      totalShipJumpsLastHour: null,
+      knownSystems,
+      totalSystems,
+      coverage: 0,
+      level: "unavailable",
+      label: "Unavailable",
+    };
+  }
+
+  const totalShipJumpsLastHour = knownCounts.reduce((total, value) => total + value, 0);
+  const { label, level } = trafficLevel(totalShipJumpsLastHour);
+  return {
+    totalShipJumpsLastHour,
+    knownSystems,
+    totalSystems,
+    coverage: Math.round((knownSystems / totalSystems) * 1000) / 1000,
+    level,
+    label,
+  };
+}
+
+function trafficLevel(totalShipJumpsLastHour: number): Pick<RouteTrafficSummary, "label" | "level"> {
+  if (totalShipJumpsLastHour < 1_000) {
+    return { label: "Clear", level: "clear" };
+  }
+  if (totalShipJumpsLastHour < 6_000) {
+    return { label: "Active", level: "active" };
+  }
+  if (totalShipJumpsLastHour < 20_100) {
+    return { label: "Busy", level: "busy" };
+  }
+  return { label: "Heavy", level: "heavy" };
 }
 
 function legendItems(systems: RouteSystem[]) {

@@ -1,4 +1,4 @@
-import { Activity, Calculator, RadioTower } from "lucide-react";
+import { Activity, Calculator, PackageSearch, RadioTower } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 
@@ -48,18 +48,20 @@ export function AppShell({
         <nav aria-label="Primary navigation" className="topnav">
           <a className="nav-action" href="#calculator">
             <Calculator size={17} />
-            Calculator
+            <span>Calculator</span>
           </a>
           <span aria-hidden="true" className="nav-separator" />
-          <span className="nav-action nav-action-disabled" aria-disabled="true">
+          <ComingSoonAction label="Discord Server">
             <DiscordMark />
-            Discord Server
-          </span>
+          </ComingSoonAction>
           <span aria-hidden="true" className="nav-separator" />
-          <a className="nav-action" href="#route">
+          <ComingSoonAction label="Route Intel">
             <Activity size={17} />
-            Route Intel
-          </a>
+          </ComingSoonAction>
+          <span aria-hidden="true" className="nav-separator" />
+          <ComingSoonAction label="My Run">
+            <PackageSearch size={17} />
+          </ComingSoonAction>
         </nav>
 
         <div className="topbar-status">
@@ -86,6 +88,29 @@ export function AppShell({
 
       <main>{children}</main>
     </div>
+  );
+}
+
+function ComingSoonAction({ children, label }: { children: ReactNode; label: string }) {
+  const [isComingSoon, setIsComingSoon] = useState(false);
+
+  const showComingSoon = () => {
+    setIsComingSoon(true);
+    window.setTimeout(() => setIsComingSoon(false), 1300);
+  };
+
+  return (
+    <button
+      aria-label={`${label} coming soon`}
+      className={`nav-action nav-action-soon ${isComingSoon ? "nav-action-soon-active" : ""}`}
+      onClick={showComingSoon}
+      type="button"
+    >
+      {children}
+      <span className="nav-action-label" data-label={label}>
+        {isComingSoon ? "Coming soon" : label}
+      </span>
+    </button>
   );
 }
 

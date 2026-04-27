@@ -25,6 +25,16 @@ try {
   await expect(desktop.getByText("Service Status")).toBeVisible();
   await expect(desktop.getByText("Active")).toBeVisible();
   await expect(desktop.getByText("Discord Server")).toBeVisible();
+  await expect(desktop.getByText("Route Intel")).toBeVisible();
+  await expect(desktop.getByText("My Run")).toBeVisible();
+  await desktop.getByRole("button", { name: "Discord Server coming soon" }).click();
+  await expect(desktop.getByText("Coming soon")).toBeVisible();
+  await desktop.waitForTimeout(1400);
+  await desktop.getByRole("button", { name: "Route Intel coming soon" }).click();
+  await expect(desktop.getByText("Coming soon")).toBeVisible();
+  await desktop.waitForTimeout(1400);
+  await desktop.getByRole("button", { name: "My Run coming soon" }).click();
+  await expect(desktop.getByText("Coming soon")).toBeVisible();
   await expect(desktop.getByText("Run Readiness")).toHaveCount(0);
   await expect(desktop.locator(".site-footer").getByText("Premium freight desk for New Eden")).toBeVisible();
   await expect(desktop.locator(".speed-toggle").getByRole("button", { name: /Rush/i })).toBeVisible();
@@ -65,6 +75,7 @@ try {
   await expect(desktop.getByText("Route Mode")).toHaveCount(0);
   await expect(desktop.getByText("Saved Quotes")).toHaveCount(0);
   await expect(desktop.getByText("Settings")).toHaveCount(0);
+  await desktop.waitForTimeout(1400);
   await expect(desktop.getByText("Coming soon")).toHaveCount(0);
   await expect(desktop.getByText("Local route")).toHaveCount(0);
   await expect(desktop.getByText("ESI synced")).toHaveCount(0);
@@ -105,6 +116,13 @@ try {
     await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toBeVisible();
     await expect(desktop.getByText("Road Overview")).toBeVisible();
     await expect(desktop.locator(".road-overview")).toBeVisible();
+    await expect(desktop.getByText("Total jumps")).toBeVisible();
+    await expect(desktop.getByText("Route Traffic")).toBeVisible();
+    await expect(desktop.getByText("Contract Acceptance")).toBeVisible();
+    await expect(desktop.getByText(/Corp queue (synced|syncing)/i)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Express|Fast|Normal|Slower|Extended|Syncing/)).toBeVisible();
+    await expect(desktop.getByText("Security bands")).toBeVisible();
+    await expect(desktop.locator(".road-intel-card small").filter({ hasText: /jumps last hour/i })).toBeVisible();
     await expect(desktop.locator(".road-system-cell").first()).toBeVisible({ timeout: 15000 });
     const roadCellCount = await desktop.locator(".road-system-cell").count();
     if (roadCellCount < 2) {

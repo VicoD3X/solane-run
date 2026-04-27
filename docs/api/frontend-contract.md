@@ -101,11 +101,53 @@ Expected shape:
       "shipJumpsLastHour": 1712
     }
   ],
+  "routeTraffic": {
+    "totalShipJumpsLastHour": 8430,
+    "knownSystems": 3,
+    "totalSystems": 3,
+    "coverage": 1,
+    "level": "busy",
+    "label": "Busy"
+  },
   "jumps": 2
 }
 ```
 
-`shipJumpsLastHour` may be `null` when traffic data is unavailable. The frontend will render `Traffic unavailable` without blocking the route display.
+`shipJumpsLastHour` may be `null` when traffic data is unavailable. `routeTraffic` may report `Unavailable` and should not block the route display.
+
+## Contract Acceptance
+
+```http
+GET /api/solane/contract-acceptance
+```
+
+The private API owns the EVE SSO token, corporation contract sync, internal queue interpretation, and freshness policy. The public frontend only receives a compact status for the Road Overview.
+
+Expected shape:
+
+```json
+{
+  "level": "fast",
+  "label": "Fast",
+  "lastSyncedAt": "2026-04-27T10:45:00Z",
+  "isFresh": true,
+  "source": "corp-contracts"
+}
+```
+
+When private ESI is not configured or unavailable, the API should return:
+
+```json
+{
+  "level": "syncing",
+  "label": "Syncing",
+  "lastSyncedAt": null,
+  "isFresh": false,
+  "source": "syncing"
+}
+```
+
+The frontend must not infer or publish the underlying queue formula.
 
 ## Future Private Endpoints
 

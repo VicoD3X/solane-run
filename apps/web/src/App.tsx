@@ -17,9 +17,9 @@ import {
   MAX_COLLATERAL_VALUE,
   volumeForSize,
 } from "./data/quote";
-import { fetchEsiRoute } from "./lib/api";
+import { fetchContractAcceptance, fetchEsiRoute } from "./lib/api";
 import { formatIskInput, parseIskInput } from "./lib/format";
-import type { CargoSize, QuoteInput, QuoteResult, RouteResult, RunSpeed } from "./types";
+import type { CargoSize, ContractAcceptanceSummary, QuoteInput, QuoteResult, RouteResult, RunSpeed } from "./types";
 
 const initialInput: QuoteInput = {
   pickup: null,
@@ -32,6 +32,13 @@ const initialInput: QuoteInput = {
 
 const initialRoute = fallbackRoute(initialInput);
 const SOLANE_UI_ACCENT = "#a855f7";
+const syncingContractAcceptance: ContractAcceptanceSummary = {
+  level: "syncing",
+  label: "Syncing",
+  lastSyncedAt: null,
+  isFresh: false,
+  source: "syncing",
+};
 
 type RoadOverviewView = {
   closing: boolean;
@@ -44,6 +51,7 @@ function App() {
   const [collateralText, setCollateralText] = useState(formatIskInput(initialInput.collateral));
   const [quote, setQuote] = useState<QuoteResult>(() => calculateQuote(initialInput, initialRoute));
   const [roadOverviewView, setRoadOverviewView] = useState<RoadOverviewView | null>(null);
+  const [contractAcceptance, setContractAcceptance] = useState(syncingContractAcceptance);
   const [, setIsSyncing] = useState(false);
   const inputRef = useRef(input);
   const quoteRef = useRef(quote);
@@ -108,6 +116,31 @@ function App() {
 
     void syncRoute();
   }, [pickupId, destinationId, syncRoute]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const refreshContractAcceptance = async () => {
+      try {
+        const nextAcceptance = await fetchContractAcceptance();
+        if (mounted) {
+          setContractAcceptance(nextAcceptance);
+        }
+      } catch {
+        if (mounted) {
+          setContractAcceptance(syncingContractAcceptance);
+        }
+      }
+    };
+
+    void refreshContractAcceptance();
+    const interval = window.setInterval(refreshContractAcceptance, 300_000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     if (showRoadOverview) {
@@ -243,6 +276,7 @@ function App() {
 
         {roadOverviewView ? (
           <RouteOverview
+            acceptance={contractAcceptance}
             closing={roadOverviewView.closing}
             input={roadOverviewView.input}
             route={roadOverviewView.route}
@@ -258,7 +292,7 @@ function App() {
       <footer className="site-footer">
         <strong>Solane Run</strong>
         <span>Premium freight desk for New Eden</span>
-        <span>Beta operations - 2026</span>
+        <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
       </footer>
     </AppShell>
   );

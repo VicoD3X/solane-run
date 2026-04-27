@@ -3,9 +3,7 @@ dist/
 .vite/
 apps/web/dist/
 apps/web/node_modules/
-apps/api/.cache/
 __pycache__/
-.pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .venv/

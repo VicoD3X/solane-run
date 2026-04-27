@@ -40,6 +40,7 @@ export function RouteOverview({ closing = false, input, route }: RouteOverviewPr
           <RouteCell
             key={`${system.id}-${index}`}
             index={index}
+            total={systems.length}
             system={system}
           />
         ))}
@@ -63,16 +64,17 @@ export function RouteOverview({ closing = false, input, route }: RouteOverviewPr
   );
 }
 
-function RouteCell({ index, system }: { index: number; system: RouteSystem }) {
+function RouteCell({ index, system, total }: { index: number; system: RouteSystem; total: number }) {
   const color = system.color ?? fallbackColor;
   const service = system.serviceType ?? "Unknown";
   const security = system.securityDisplay ?? "unknown";
   const traffic = trafficLabel(system.shipJumpsLastHour);
+  const edgeClass = tooltipEdgeClass(index, total);
 
   return (
     <button
       aria-label={`${system.name}, ${service}, security ${security}, ${traffic}`}
-      className="road-system-cell"
+      className={`road-system-cell ${edgeClass}`}
       style={{
         "--cell-color": color,
         "--cell-delay": `${280 + Math.min(index, 42) * 16}ms`,
@@ -88,6 +90,16 @@ function RouteCell({ index, system }: { index: number; system: RouteSystem }) {
       </span>
     </button>
   );
+}
+
+function tooltipEdgeClass(index: number, total: number) {
+  if (index < 6) {
+    return "road-system-cell-start";
+  }
+  if (index >= total - 6) {
+    return "road-system-cell-end";
+  }
+  return "";
 }
 
 function fallbackSystems(input: QuoteInput): RouteSystem[] {

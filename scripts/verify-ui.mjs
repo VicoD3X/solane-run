@@ -1,12 +1,14 @@
 import { chromium, expect } from "@playwright/test";
 
-const baseUrl = "http://127.0.0.1:5173";
+const baseUrl = process.env.VITE_SMOKE_BASE_URL ?? "http://127.0.0.1:5173";
+const apiBaseUrl = process.env.VITE_API_BASE_URL;
+const apiAvailable = apiBaseUrl ? await isApiAvailable(apiBaseUrl) : false;
 
 const browser = await chromium.launch({ headless: true });
 
 try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await desktop.goto(baseUrl, { waitUntil: "networkidle" });
+  await desktop.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await desktop.evaluate(() => document.fonts.ready);
 
   await expect(desktop).toHaveTitle("Solane Run");
@@ -51,7 +53,11 @@ try {
   await expect(desktop.locator(".contract-packet").getByText("1 day")).toHaveCount(2);
   await desktop.getByRole("button", { name: "Copy Contract to" }).click();
   await expect(desktop.getByRole("button", { name: "Copy Contract to" })).toBeVisible();
-  await expect(desktop.getByText(/pilots/i)).toBeVisible({ timeout: 15000 });
+  if (apiAvailable) {
+    await expect(desktop.getByText(/pilots/i)).toBeVisible({ timeout: 15000 });
+  } else {
+    await expect(desktop.getByText("syncing", { exact: true })).toBeVisible();
+  }
   await expect(desktop.getByText("Public ESI Route")).toHaveCount(0);
   await expect(desktop.getByText("History")).toHaveCount(0);
   await expect(desktop.getByText("Public-only ESI scope")).toHaveCount(0);
@@ -84,36 +90,39 @@ try {
   await desktop.getByRole("textbox", { name: "Collateral" }).fill("6B");
   await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("5,000,000,000");
 
-  await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita");
-  await desktop.getByRole("option", { name: /Jita/i }).click();
-  await desktop.getByRole("combobox", { name: "Destination" }).fill("Amarr");
-  await desktop.getByRole("option", { name: /Amarr/i }).click();
-  await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toBeVisible();
-  await expect(desktop.getByText("Road Overview")).toBeVisible();
-  await expect(desktop.locator(".road-overview")).toBeVisible();
-  await expect(desktop.locator(".road-system-cell").first()).toBeVisible({ timeout: 15000 });
-  const roadCellCount = await desktop.locator(".road-system-cell").count();
-  if (roadCellCount < 2) {
-    throw new Error(`Expected at least two road cells, got ${roadCellCount}`);
-  }
-  await desktop.locator(".road-system-cell").first().hover();
-  await expect(desktop.locator(".road-system-tooltip").first()).toContainText(/Security|Traffic unavailable|jumps last hour/i);
   const serviceAccent = await desktop.locator(".app-shell").evaluate((node) =>
     getComputedStyle(node).getPropertyValue("--service-accent").trim(),
   );
   if (serviceAccent.toLowerCase() !== "#a855f7") {
     throw new Error(`Expected fixed Solane accent #a855f7, got ${serviceAccent}`);
   }
-  await desktop.waitForFunction(() => {
-    const text = document.querySelector(".contract-packet")?.textContent ?? "";
-    return !text.includes("0 jumps");
-  }, null, { timeout: 15000 });
-  await desktop.getByRole("button", { name: "800,000 m3" }).click();
-  await expect(desktop.locator(".contract-packet").getByText("800,000 m3")).toBeVisible();
-  await desktop.waitForFunction(() => {
-    const text = document.querySelector(".contract-packet")?.textContent ?? "";
-    return text.includes("5,000,000,000 ISK");
-  }, null, { timeout: 15000 });
+
+  if (apiAvailable) {
+    await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita");
+    await desktop.getByRole("option", { name: /Jita/i }).click();
+    await desktop.getByRole("combobox", { name: "Destination" }).fill("Amarr");
+    await desktop.getByRole("option", { name: /Amarr/i }).click();
+    await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toBeVisible();
+    await expect(desktop.getByText("Road Overview")).toBeVisible();
+    await expect(desktop.locator(".road-overview")).toBeVisible();
+    await expect(desktop.locator(".road-system-cell").first()).toBeVisible({ timeout: 15000 });
+    const roadCellCount = await desktop.locator(".road-system-cell").count();
+    if (roadCellCount < 2) {
+      throw new Error(`Expected at least two road cells, got ${roadCellCount}`);
+    }
+    await desktop.locator(".road-system-cell").first().hover();
+    await expect(desktop.locator(".road-system-tooltip").first()).toContainText(/Security|Traffic unavailable|jumps last hour/i);
+    await desktop.waitForFunction(() => {
+      const text = document.querySelector(".contract-packet")?.textContent ?? "";
+      return !text.includes("0 jumps");
+    }, null, { timeout: 15000 });
+    await desktop.getByRole("button", { name: "800,000 m3" }).click();
+    await expect(desktop.locator(".contract-packet").getByText("800,000 m3")).toBeVisible();
+    await desktop.waitForFunction(() => {
+      const text = document.querySelector(".contract-packet")?.textContent ?? "";
+      return text.includes("5,000,000,000 ISK");
+    }, null, { timeout: 15000 });
+  }
 
   const desktopOverflow = await desktop.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -129,14 +138,16 @@ try {
   }
   await desktop.waitForTimeout(1200);
   await desktop.screenshot({ path: "dev.logs/desktop.png", fullPage: true });
-  await desktop.getByRole("button", { name: "Clear Destination" }).click();
-  await expect(desktop.locator(".road-overview-closing")).toBeVisible({ timeout: 1000 });
-  await expect(desktop.locator(".copyable-value em.route-meta-closing")).toBeVisible({ timeout: 1000 });
-  await expect(desktop.locator(".road-overview")).toHaveCount(0, { timeout: 2000 });
-  await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toHaveCount(0, { timeout: 2000 });
+  if (apiAvailable) {
+    await desktop.getByRole("button", { name: "Clear Destination" }).click();
+    await expect(desktop.locator(".road-overview-closing")).toBeVisible({ timeout: 1000 });
+    await expect(desktop.locator(".copyable-value em.route-meta-closing")).toBeVisible({ timeout: 1000 });
+    await expect(desktop.locator(".road-overview")).toHaveCount(0, { timeout: 2000 });
+    await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toHaveCount(0, { timeout: 2000 });
+  }
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true });
-  await mobile.goto(baseUrl, { waitUntil: "networkidle" });
+  await mobile.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await mobile.evaluate(() => document.fonts.ready);
   await expect(mobile.getByRole("link", { name: "Solane Run dashboard" })).toBeVisible();
   await expect(mobile.getByText("Freight parameters")).toBeVisible();
@@ -154,4 +165,13 @@ try {
   await mobile.screenshot({ path: "dev.logs/mobile.png", fullPage: true });
 } finally {
   await browser.close();
+}
+
+async function isApiAvailable(apiUrl) {
+  try {
+    const response = await fetch(`${apiUrl}/api/eve/status`, { signal: AbortSignal.timeout(1500) });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }

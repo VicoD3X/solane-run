@@ -20,14 +20,14 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: data_scope
+    id: scope
     attributes:
-      label: Data scope
-      description: The beta should stay public-ESI-first.
+      label: Scope
+      description: The public repository is frontend-only.
       options:
-        - Public ESI or SDE only
-        - Local calculation only
-        - Requires private ESI or auth
+        - Frontend only
+        - API contract change
+        - Requires private backend work
         - Unsure
     validations:
       required: true

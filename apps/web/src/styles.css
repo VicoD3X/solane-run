@@ -1032,6 +1032,7 @@ main {
   gap: 7px;
   min-height: 180px;
   padding: 24px 2px;
+  overflow: visible;
 }
 
 .road-system-cell {
@@ -1067,7 +1068,7 @@ main {
 .road-system-cell:focus-visible {
   z-index: 8;
   outline: none;
-  transform: translateY(-2px) scale(1.08);
+  transform: translateY(-2px);
 }
 
 .road-system-tooltip {
@@ -1095,6 +1096,17 @@ main {
     transform 160ms ease;
 }
 
+.road-system-cell-start .road-system-tooltip {
+  left: 0;
+  transform: translate(0, 8px);
+}
+
+.road-system-cell-end .road-system-tooltip {
+  right: 0;
+  left: auto;
+  transform: translate(0, 8px);
+}
+
 .road-system-tooltip::after {
   position: absolute;
   top: 100%;
@@ -1106,6 +1118,17 @@ main {
   background: rgba(2, 7, 13, 0.96);
   content: "";
   transform: translate(-50%, -4px) rotate(45deg);
+}
+
+.road-system-cell-start .road-system-tooltip::after {
+  left: 12px;
+  transform: translate(0, -4px) rotate(45deg);
+}
+
+.road-system-cell-end .road-system-tooltip::after {
+  right: 12px;
+  left: auto;
+  transform: translate(0, -4px) rotate(45deg);
 }
 
 .road-system-tooltip strong {
@@ -1128,6 +1151,13 @@ main {
 .road-system-cell:focus-visible .road-system-tooltip {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+.road-system-cell-start:hover .road-system-tooltip,
+.road-system-cell-start:focus-visible .road-system-tooltip,
+.road-system-cell-end:hover .road-system-tooltip,
+.road-system-cell-end:focus-visible .road-system-tooltip {
+  transform: translate(0, 0);
 }
 
 .road-overview-footer {
@@ -1442,8 +1472,10 @@ main {
 
 .quote-head strong {
   font-family: var(--font-main);
-  font-size: 1.02rem;
-  font-weight: 600;
+  color: var(--text);
+  font-size: 1.22rem;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
 .estimate-block {
@@ -1754,10 +1786,6 @@ main {
   color: #dce8f3;
   font-size: 0.7rem;
   text-transform: uppercase;
-}
-
-.quote-head strong {
-  color: #cdb7ff;
 }
 
 .quote-panel .status-badge,

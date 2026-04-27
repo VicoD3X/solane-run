@@ -5,20 +5,19 @@
 ## Scope
 
 - [ ] Frontend
-- [ ] Backend
-- [ ] ESI or SDE data
+- [ ] API contract
 - [ ] Docker or infra
 - [ ] GitHub or docs only
 
-## Public ESI Guardrail
+## Private Backend Guardrail
 
-- [ ] This change does not introduce EVE SSO, private ESI scopes, private structures, saved user quotes, or account-bound flows.
+- [ ] This change does not introduce backend business logic, EVE ESI adapters, pricing formulas, private structures, saved user quotes, or account-bound flows into the public repository.
+- [ ] Any backend-facing behavior is represented through `docs/api/frontend-contract.md`.
 
 ## Validation
 
 - [ ] `npm run lint:web`
 - [ ] `npm run build:web`
-- [ ] `npm run test:api`
 - [ ] `node scripts/verify-ui.mjs`
 - [ ] `docker compose -f infra/docker-compose.yml config`
 

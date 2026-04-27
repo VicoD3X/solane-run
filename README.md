@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Premium freight calculator for EVE Online logistics.</strong><br />
-  Public ESI only, route reconnaissance, and a modern command-desk interface for Solane Run.
+  Public source-available frontend for route reconnaissance and a modern command-desk interface for Solane Run.
 </p>
 
 <p align="center">
@@ -14,71 +14,76 @@
     <img alt="CI" src="https://github.com/VicoD3X/solane-run/actions/workflows/ci.yml/badge.svg" />
   </a>
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=0b1220" />
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white" />
-  <img alt="EVE ESI" src="https://img.shields.io/badge/EVE%20ESI-public%20only-19a8ff" />
+  <img alt="License" src="https://img.shields.io/badge/license-proprietary-a855f7" />
+  <img alt="Frontend" src="https://img.shields.io/badge/frontend-source%20available-a855f7" />
+  <img alt="API" src="https://img.shields.io/badge/backend-private-19a8ff" />
 </p>
 
 ![Solane Run desktop preview](docs/github/solane-run-desktop.png)
 
 ## Mission
 
-Solane Run is the foundation for a premium freight service around EVE Online logistics. The beta surface focuses on a fast, readable freight calculator: select a pick up system, select a destination, choose a cargo size, and get an automatically refreshed route-backed quote.
+Solane Run is the frontend foundation for a premium freight service around EVE Online logistics. The beta surface focuses on a fast, readable freight calculator: select a pick up system, select a destination, choose a cargo size, and get an automatically refreshed route-backed contract review.
 
-The product intentionally avoids EVE SSO, private structures, contracts, saved quotes, accounts, and authenticated ESI scopes during this phase. The app is built to stay useful with public data for as long as possible.
+The public repository intentionally contains only the web app and is distributed under a proprietary All Rights Reserved license. EVE ESI integration, future pricing rules, operational logic, contract automation, account flows, and internal Solane Run services live behind a private API.
 
 ## Current Surface
 
 | Area | Status | Notes |
 | --- | --- | --- |
 | Freight calculator | Active | Pick Up, Destination, cargo size, free collateral up to 5B ISK, contract review |
-| System catalog | Active | Official SDE seed filtered to HighSec, LowSec, Pochven, Thera, and Zarzakh |
-| Road overview | Active | Public ESI route, gate-to-gate jumps, system security bar, and last-hour traffic tooltips |
-| Tranquility status | Active | Public ESI status with player count and EVE time |
-| Private ESI features | Out of scope | No auth, no saved quotes, no private structures, no contracts |
+| System catalog | API-backed | Provided by the private Solane Run API |
+| Road overview | API-backed | Gate-to-gate route, system security bar, and last-hour traffic tooltips |
+| Tranquility status | API-backed | Player count and EVE time exposed through the private API |
+| Backend logic | Private | EVE ESI adapters, pricing rules, caches, and internal operations are not published here |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Web["React + Vite + TypeScript"] --> API["FastAPI backend"]
-  API --> ESI["EVE ESI public endpoints"]
-  API --> SDE["Static SDE system seed"]
+  Web["React + Vite + TypeScript"] --> API["Solane Run private API"]
+  API --> ESI["EVE ESI adapters"]
+  API --> Rules["Internal pricing and service rules"]
+  API --> Cache["Private caches and data stores"]
   Web --> UI["Fixed violet command UI"]
-  API --> Cache["Local catalog cache"]
 ```
 
-### Monorepo layout
+### Repository layout
 
 ```text
 apps/
   web/       React, Vite, TypeScript, Tailwind, local fonts
-  api/       FastAPI, Pydantic, async httpx ESI client
 docs/
+  api/       Frontend-facing private API contract
   design/    Accepted visual concept
   github/    Repository presentation assets
-infra/       Docker Compose and nginx scaffolding
+infra/       Frontend Docker Compose and nginx scaffolding
 logo/        Source Solane Run brand assets
 scripts/     Local verification scripts
 ```
 
-## Public Data Policy
+## API Boundary
 
-Solane Run currently uses public data only:
+This repository does not ship backend source code. The web app talks to a Solane Run API through `VITE_API_BASE_URL`.
 
-- ESI route endpoint for gate-to-gate routes
-- ESI system jumps endpoint for last-hour traffic context
-- ESI status endpoint for Tranquility status
-- ESI systems refresh for catalog validation
-- Official SDE seed for the selectable system catalog
+The private API is responsible for:
 
-Excluded on purpose:
+- EVE ESI adapters and compatibility handling
+- SDE/system catalog filtering
+- route policy, route traffic, and cache strategy
+- Solane Run pricing formulas and service rules
+- future account, order, and internal operational workflows
+
+The frontend-facing contract is documented in [`docs/api/frontend-contract.md`](docs/api/frontend-contract.md). Public contributors should treat that document as the integration surface and should not add backend business logic to this repository.
+
+Out of scope for the public repo:
 
 - EVE SSO and OAuth
-- private citadel or structure reads
-- saved quotes tied to user accounts
-- private contracts or corporation order data
-- admin pricing panels
+- private ESI scopes or structure reads
+- Solane Run pricing formulas
+- saved quotes tied to accounts
+- private contracts, corporation order data, or admin panels
 
 ## Visual System
 
@@ -100,16 +105,10 @@ Install frontend dependencies:
 npm install
 ```
 
-Install backend dependencies:
+Configure the private API base URL if needed:
 
 ```powershell
-py -m pip install -r apps/api/requirements-dev.txt
-```
-
-Run the API:
-
-```powershell
-npm run dev:api
+$env:VITE_API_BASE_URL="http://localhost:8000"
 ```
 
 Run the web app:
@@ -129,12 +128,11 @@ http://127.0.0.1:5173/
 ```powershell
 npm run lint:web
 npm run build:web
-npm run test:api
 node scripts/verify-ui.mjs
 docker compose -f infra/docker-compose.yml config
 ```
 
-`scripts/verify-ui.mjs` is the current Playwright smoke test. It validates the main calculator flow, fixed violet UI accent, automatic route refresh, road overview behavior, responsive rendering, and the absence of private/auth-oriented UI.
+`scripts/verify-ui.mjs` is the current Playwright smoke test. It always validates the frontend shell and responsive rendering. When `VITE_API_BASE_URL` is set and points to a compatible Solane Run API, it also validates automatic route refresh and road overview behavior.
 
 ## Environment
 
@@ -142,24 +140,25 @@ Copy `.env.example` and configure values as needed:
 
 ```text
 VITE_API_BASE_URL=http://localhost:8000
-ESI_BASE_URL=https://esi.evetech.net/latest
-ESI_DATASOURCE=tranquility
-ESI_COMPATIBILITY_DATE=
-ESI_USER_AGENT=Solane Run beta contact@example.com
-CORS_ORIGINS=http://localhost:5173
 ```
+
+## License
+
+Copyright 2026 Victor A. All rights reserved.
+
+This repository is public for visibility and review, but it is not open source under a permissive license. Copying, redistribution, hosting, modification, or commercial use requires prior written permission.
 
 ## Deployment Direction
 
-The repository is prepared for a future Hetzner VPS deployment through Docker. Domain, TLS, runtime secrets, and VPS-specific hardening are intentionally left for the deployment phase.
+The public repository builds the frontend container only. Production deployment will pair this web app with the private Solane Run API on the Hetzner VPS. Domain, TLS, runtime secrets, API deployment, and VPS-specific hardening are intentionally left for the private deployment phase.
 
 ## Roadmap
 
 - Stabilize freight pricing formulas
-- Expand calculator rules around service classes
+- Expand calculator rules around service classes through the private API
 - Promote Playwright smoke checks into a full E2E suite
-- Add production Docker profiles for Hetzner
-- Keep the app English-only and public-ESI-first
+- Add production frontend Docker profiles for Hetzner
+- Keep the app English-only and API-contract-first
 
 ## Disclaimer
 

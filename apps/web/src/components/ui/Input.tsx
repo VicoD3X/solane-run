@@ -6,11 +6,14 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   hint?: string;
   accessory?: ReactNode;
+  inputAccessory?: ReactNode;
 };
 
 export function Input({
   "aria-describedby": ariaDescribedBy,
   accessory,
+  id,
+  inputAccessory,
   label,
   hint,
   className = "",
@@ -18,13 +21,17 @@ export function Input({
   ...props
 }: InputProps) {
   const reactId = useId().replace(/[^a-zA-Z0-9_-]/g, "-");
+  const inputId = id ?? `input-${reactId}`;
   const hintId = `input-hint-${reactId}`;
 
   return (
-    <label className={`field ${className}`}>
-      <span className="field-label">{label}</span>
+    <div className={`field ${className}`}>
+      <label className="field-label" htmlFor={inputId}>{label}</label>
       <span className={accessory ? "field-input-row" : undefined}>
-        <input aria-describedby={hint ? hintId : ariaDescribedBy} className="field-input" type={type} {...props} />
+        <span className={inputAccessory ? "field-input-control field-input-control-with-accessory" : "field-input-control"}>
+          <input id={inputId} aria-describedby={hint ? hintId : ariaDescribedBy} className="field-input" type={type} {...props} />
+          {inputAccessory}
+        </span>
         {accessory}
       </span>
       {hint ? (
@@ -32,6 +39,6 @@ export function Input({
           {hint}
         </span>
       ) : null}
-    </label>
+    </div>
   );
 }

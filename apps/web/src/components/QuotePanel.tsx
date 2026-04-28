@@ -31,7 +31,7 @@ export function QuotePanel({ input, result, serviceWindow }: QuotePanelProps) {
   const routePair = input.pickup && input.destination
     ? `${input.pickup.name} - ${input.destination.name}`
     : null;
-  const serviceWindowWarning = input.speed === "rush" && serviceWindow.level !== "high_activity"
+  const serviceWindowWarning = input.speed === "rush" && serviceWindow.level === "low_activity"
     ? rushWindowWarning(serviceWindow)
     : null;
 
@@ -147,9 +147,9 @@ export function QuotePanel({ input, result, serviceWindow }: QuotePanelProps) {
 
 function rushWindowWarning(serviceWindow: ServiceWindowSummary) {
   if (serviceWindow.level === "low_activity") {
-    return "Rush during Low Activity may be accepted slower.";
+    return "Rush during Low Activity is handled with limited availability.";
   }
-  return "Rush during Medium Activity may vary.";
+  return null;
 }
 
 function blockedReasonTitle(code: QuoteResult["blockedCode"]) {

@@ -439,6 +439,15 @@ function App() {
     setQuote((currentQuote) => calculateQuote(nextInput, currentQuote.route.source === "esi" ? currentQuote.route : fallbackRoute(nextInput), nextValidation));
   };
 
+  const applyCollateralMultiplier = (multiplier: number) => {
+    const baseValue = parseCollateralShortcutBase(collateralText);
+    if (baseValue === null) {
+      return;
+    }
+
+    updateCollateral(String(Math.round(baseValue * multiplier)));
+  };
+
   return (
     <AppShell
       accentColor={SOLANE_UI_ACCENT}
@@ -512,6 +521,24 @@ function App() {
           </div>
 
           <Input
+            inputAccessory={(
+              <span className="collateral-quick-actions" role="group" aria-label="Collateral shortcuts">
+                <button
+                  aria-label="Convert collateral to millions"
+                  onClick={() => applyCollateralMultiplier(1_000_000)}
+                  type="button"
+                >
+                  M
+                </button>
+                <button
+                  aria-label="Convert collateral to billions"
+                  onClick={() => applyCollateralMultiplier(1_000_000_000)}
+                  type="button"
+                >
+                  B
+                </button>
+              </span>
+            )}
             accessory={
               <span className="collateral-limit-chip" title={`Max collateral ${formatIskInput(collateralValidation.limit)} ISK`}>
                 <span>Max collateral</span>
@@ -521,11 +548,11 @@ function App() {
             aria-invalid={collateralInvalid}
             className={collateralInvalid ? "field-invalid" : ""}
             hint={collateralInvalid ? collateralValidation.message ?? undefined : undefined}
-            inputMode="numeric"
+            inputMode="decimal"
             label="Collateral"
             maxLength={18}
             onChange={(event) => updateCollateral(event.target.value)}
-            pattern="[0-9 ]*"
+            pattern="[0-9 .,]*"
             placeholder="Enter collateral"
             value={collateralText}
           />
@@ -554,7 +581,7 @@ function App() {
 
       <footer className="site-footer">
         <strong>Solane Run</strong>
-        <span>Premium freight desk for New Eden</span>
+        <span>Premium & independant freight shipping service</span>
         <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
       </footer>
         </>
@@ -564,6 +591,21 @@ function App() {
 }
 
 export default App;
+
+function parseCollateralShortcutBase(value: string) {
+  const normalized = value.trim().replace(/\s+/g, "").replace(/,/g, ".");
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/^\d+(?:\.\d+)?$/);
+  if (!match) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
 
 function RouteIntelPage() {
   return (
@@ -581,7 +623,7 @@ function RouteIntelPage() {
       </section>
       <footer className="site-footer">
         <strong>Solane Run</strong>
-        <span>Premium freight desk for New Eden</span>
+        <span>Premium & independant freight shipping service</span>
         <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
       </footer>
     </>

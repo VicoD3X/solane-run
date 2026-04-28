@@ -10,7 +10,10 @@ export function sanitizeSystemQuery(value: string): string {
 }
 
 export function sanitizeCollateralInput(value: string): string {
-  return value.replace(/\D/g, "");
+  const normalized = value.replace(/,/g, ".").replace(/[^\d.]/g, "");
+  const [integer = "", ...decimalParts] = normalized.split(".");
+  const decimal = decimalParts.join("");
+  return decimalParts.length > 0 ? `${integer}.${decimal}` : integer;
 }
 
 export function sanitizeApiText(value: unknown, fallback = ""): string {

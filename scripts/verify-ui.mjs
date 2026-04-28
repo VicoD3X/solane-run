@@ -36,7 +36,7 @@ try {
   await desktop.getByRole("link", { name: "Back to calculator" }).click();
   await expect(desktop.getByText("Freight parameters")).toBeVisible();
   await expect(desktop.getByText("Run Readiness")).toHaveCount(0);
-  await expect(desktop.locator(".site-footer").getByText("Premium freight desk for New Eden")).toBeVisible();
+  await expect(desktop.locator(".site-footer").getByText("Premium & independant freight shipping service")).toBeVisible();
   await expect(desktop.locator(".speed-toggle").getByRole("button", { name: /Normal/i })).toBeVisible();
   await expect(desktop.locator(".quote-lines")).toHaveCount(0);
   await expect(desktop.locator(".contract-packet").getByText("Route")).toBeVisible();
@@ -105,10 +105,14 @@ try {
   await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita123");
   await expect(desktop.getByRole("combobox", { name: "Pick Up" })).toHaveValue("Jita");
   await desktop.getByRole("combobox", { name: "Pick Up" }).fill("");
-  await desktop.getByRole("textbox", { name: "Collateral" }).fill("2.5B");
-  await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("25");
-  await desktop.getByRole("textbox", { name: "Collateral" }).fill("2500000000");
+  await desktop.getByRole("textbox", { name: "Collateral" }).fill("2.5");
+  await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("2.5");
+  await desktop.getByRole("button", { name: "Convert collateral to billions" }).click();
+  await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("2 500 000 000");
   await expect(desktop.locator(".contract-packet").getByText("2,500,000,000 ISK")).toBeVisible();
+  await desktop.getByRole("textbox", { name: "Collateral" }).fill("200");
+  await desktop.getByRole("button", { name: "Convert collateral to millions" }).click();
+  await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("200 000 000");
   await desktop.getByRole("textbox", { name: "Collateral" }).fill("6000000000");
   await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("6 000 000 000");
   await expect(desktop.getByRole("status")).toContainText("Collateral limit exceeded. Maximum allowed is 5,000,000,000 ISK.");

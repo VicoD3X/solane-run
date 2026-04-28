@@ -41,7 +41,7 @@ export function AppShell({
           <img alt="" src="/assets/logo-detoure.png" />
           <div>
             <strong>SOLANE RUN</strong>
-            <span>Premium freight desk</span>
+            <span>Premium freight service</span>
           </div>
         </a>
 

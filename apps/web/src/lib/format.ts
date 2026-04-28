@@ -23,7 +23,14 @@ export function formatIskInput(value: number): string {
 }
 
 export function formatIskInputText(value: string): string {
-  const digits = sanitizeCollateralInput(value);
+  const decimalInput = sanitizeCollateralInput(value);
+  if (decimalInput.includes(".")) {
+    const [integer = "", decimal = ""] = decimalInput.split(".");
+    const groupedInteger = integer ? groupDigitsWithSpaces(integer) : "0";
+    return `${groupedInteger}.${decimal.slice(0, 3)}`;
+  }
+
+  const digits = decimalInput;
   if (!digits) {
     return "";
   }

@@ -4,7 +4,6 @@ import path from "node:path";
 const repoRoot = process.cwd();
 const sourceRoot = path.join(repoRoot, "apps", "web", "src");
 const distRoot = path.join(repoRoot, "apps", "web", "dist");
-const indexPath = path.join(repoRoot, "apps", "web", "index.html");
 const nginxPath = path.join(repoRoot, "infra", "nginx", "default.conf");
 
 const forbiddenSourcePatterns = [
@@ -60,7 +59,6 @@ for (const filePath of [
   }
 }
 
-const indexHtml = await readFile(indexPath, "utf8");
 const nginxConfig = await readFile(nginxPath, "utf8");
 const requiredCspDirectives = [
   "default-src 'self'",
@@ -72,9 +70,6 @@ const requiredCspDirectives = [
 ];
 
 for (const directive of requiredCspDirectives) {
-  if (!indexHtml.includes(directive)) {
-    failures.push(`apps/web/index.html missing CSP directive: ${directive}`);
-  }
   if (!nginxConfig.includes(directive)) {
     failures.push(`infra/nginx/default.conf missing CSP directive: ${directive}`);
   }

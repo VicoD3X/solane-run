@@ -61,10 +61,14 @@ export type RouteSystem = {
   serviceType?: string | null;
   color?: string | null;
   shipJumpsLastHour?: number | null;
+  shipKillsLastHour?: number | null;
+  podKillsLastHour?: number | null;
 };
 
 export type RouteTrafficSummary = {
   totalShipJumpsLastHour: number | null;
+  totalShipKillsLastHour: number | null;
+  totalPodKillsLastHour: number | null;
   knownSystems: number;
   totalSystems: number;
   coverage: number;

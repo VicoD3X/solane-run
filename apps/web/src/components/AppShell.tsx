@@ -46,7 +46,7 @@ export function AppShell({
         </a>
 
         <nav aria-label="Primary navigation" className="topnav">
-          <a className="nav-action" href="#calculator">
+          <a className="nav-action" href="/">
             <Calculator size={17} />
             <span>Calculator</span>
           </a>
@@ -55,9 +55,10 @@ export function AppShell({
             <DiscordMark />
           </ComingSoonAction>
           <span aria-hidden="true" className="nav-separator" />
-          <ComingSoonAction label="Route Intel">
+          <a className="nav-action" href="/route-intel">
             <Activity size={17} />
-          </ComingSoonAction>
+            <span>Route Intel</span>
+          </a>
         </nav>
 
         <div className="topbar-status">

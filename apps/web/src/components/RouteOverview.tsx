@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { BadgeCheck, Clock3, Radar, Shield, ShieldAlert, Waypoints } from "lucide-react";
+import { BadgeCheck, Radar, Shield, ShieldAlert, Waypoints } from "lucide-react";
 
 import type {
   QuoteInput,
@@ -8,7 +7,6 @@ import type {
   RouteRiskSummary,
   RouteSystem,
   RouteTrafficSummary,
-  ServiceWindowSummary,
   SolarSystem,
 } from "../types";
 
@@ -16,16 +14,14 @@ type RouteOverviewProps = {
   closing?: boolean;
   input: QuoteInput;
   route: RouteResult;
-  serviceWindow: ServiceWindowSummary;
 };
 
 const fallbackColor = "#8393a3";
 
-export function RouteOverview({ closing = false, input, route, serviceWindow }: RouteOverviewProps) {
+export function RouteOverview({ closing = false, input, route }: RouteOverviewProps) {
   const systems = route.routeSystems.length > 0 ? route.routeSystems : fallbackSystems(input);
   const routeTraffic = route.routeTraffic ?? routeTrafficFromSystems(systems);
   const routeRisk = route.routeRisk ?? fallbackRouteRisk();
-  const eutzTime = useParisClock();
   const routeLabel = input.pickup && input.destination
     ? `${input.pickup.name} - ${input.destination.name}`
     : "Awaiting endpoints";
@@ -50,20 +46,10 @@ export function RouteOverview({ closing = false, input, route, serviceWindow }: 
       </header>
 
       <div className="road-intel-grid" aria-label="Route intelligence">
-        <RouteTrafficMetric
-          detail={trafficDetail(routeTraffic)}
+        <RouteTrafficReport
           icon={<Radar size={15} />}
+          traffic={routeTraffic}
           tone={`road-traffic-${routeTraffic.level}`}
-          label="Traffic"
-          value={routeTraffic.label}
-        />
-        <ServiceWindowMetric
-          detail={serviceWindow.detail}
-          eutzTime={eutzTime}
-          icon={<Clock3 size={15} />}
-          tone={`road-window-${serviceWindow.level}`}
-          label="Contract Acceptance"
-          value={serviceWindow.label}
         />
         {routeRisk.routeStandard === "golden" && !routeRisk.isBlocking ? (
           <GoldenStandardReport icon={<BadgeCheck size={15} />} risk={routeRisk} />
@@ -104,68 +90,36 @@ export function RouteOverview({ closing = false, input, route, serviceWindow }: 
   );
 }
 
-function RouteTrafficMetric({
-  detail,
+function RouteTrafficReport({
   icon,
-  label,
   tone,
-  value,
+  traffic,
 }: {
-  detail: string;
   icon: ReactNode;
-  label: string;
   tone?: string;
-  value: string;
+  traffic: RouteTrafficSummary;
 }) {
   return (
-    <div className={`road-intel-card road-traffic-card ${tone ?? ""}`}>
-      <div className="road-intel-icon" aria-hidden="true">{icon}</div>
-      <div className="road-intel-copy">
+    <div className={`road-intel-card road-route-state road-traffic-report ${tone ?? ""}`}>
+      <div className="road-state-emblem" aria-hidden="true">{icon}</div>
+      <div className="road-state-copy">
+        <span>Traffic</span>
+        <p>Route activity snapshot.</p>
+      </div>
+      <strong>{traffic.label}</strong>
+      <div className="road-risk-meta" aria-label="Route traffic details">
         <span>
-          <b>{label}</b>
+          Ship jumps
+          <b>{formatMetric(traffic.totalShipJumpsLastHour)} last hour</b>
         </span>
-        <small>{detail}</small>
-      </div>
-      <div className="road-intel-value">
-        <i aria-hidden="true" />
-        <strong>{value}</strong>
-      </div>
-    </div>
-  );
-}
-
-function ServiceWindowMetric({
-  detail,
-  eutzTime,
-  icon,
-  label,
-  tone,
-  value,
-}: {
-  detail: string;
-  eutzTime: string;
-  icon: ReactNode;
-  label: string;
-  tone?: string;
-  value: string;
-}) {
-  return (
-    <div className={`road-intel-card road-window-card ${tone ?? ""}`}>
-      <div className="road-intel-icon" aria-hidden="true">{icon}</div>
-      <div className="road-intel-copy">
         <span>
-          <b>{label}</b>
+          Ships destroyed
+          <b>{formatMetric(traffic.totalShipKillsLastHour)} last hour</b>
         </span>
-        <small>{detail}</small>
-      </div>
-      <div className="road-intel-value">
-        <i aria-hidden="true" />
-        <strong>{value}</strong>
-      </div>
-      <div className="road-eutz-time" aria-label={`EUTZ time ${eutzTime} Paris`}>
-        <span>EUTZ Time</span>
-        <strong>{eutzTime}</strong>
-        <small>Paris</small>
+        <span>
+          Pods destroyed
+          <b>{formatMetric(traffic.totalPodKillsLastHour)} last hour</b>
+        </span>
       </div>
     </div>
   );
@@ -208,7 +162,10 @@ function isStaticRestrictedRisk(risk: RouteRiskSummary) {
 
 function routeRiskReason(risk: RouteRiskSummary) {
   if (risk.level === "restricted") {
-    return "Restricted Solane system.";
+    if (isStaticRestrictedRisk(risk)) {
+      return "Static Solane restricted system.";
+    }
+    return `${risk.reason ?? "Temporary risk lock."} Temporary restriction.`;
   }
   if (risk.level === "nominal") {
     return "No elevated risk detected.";
@@ -242,30 +199,11 @@ function GoldenStandardReport({ icon, risk }: { icon: ReactNode; risk: RouteRisk
   );
 }
 
-function useParisClock() {
-  const [time, setTime] = useState(() => formatParisTime());
-
-  useEffect(() => {
-    const update = () => setTime(formatParisTime());
-    update();
-    const interval = window.setInterval(update, 30_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
-  return time;
-}
-
-function formatParisTime(now = new Date()) {
-  try {
-    return new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      hour12: false,
-      minute: "2-digit",
-      timeZone: "Europe/Paris",
-    }).format(now);
-  } catch {
-    return "--:--";
+function formatMetric(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return "Unavailable";
   }
+  return value.toLocaleString("en-US");
 }
 
 function RouteCell({ index, system, total }: { index: number; system: RouteSystem; total: number }) {
@@ -315,6 +253,8 @@ function fallbackSystems(input: QuoteInput): RouteSystem[] {
       serviceType: system.serviceType,
       color: system.color,
       shipJumpsLastHour: null,
+      shipKillsLastHour: null,
+      podKillsLastHour: null,
     }));
 }
 
@@ -323,15 +263,6 @@ function trafficLabel(shipJumpsLastHour: number | null | undefined) {
     return "Traffic unavailable";
   }
   return `${shipJumpsLastHour.toLocaleString("en-US")} jumps last hour`;
-}
-
-function trafficDetail(traffic: RouteTrafficSummary) {
-  if (traffic.totalShipJumpsLastHour === null) {
-    return "Unavailable";
-  }
-
-  const partial = traffic.coverage > 0 && traffic.coverage < 1 ? " - partial" : "";
-  return `${traffic.totalShipJumpsLastHour.toLocaleString("en-US")} last hour${partial}`;
 }
 
 function routeTrafficFromSystems(systems: RouteSystem[]): RouteTrafficSummary {
@@ -344,6 +275,8 @@ function routeTrafficFromSystems(systems: RouteSystem[]): RouteTrafficSummary {
   if (totalSystems === 0 || knownSystems === 0) {
     return {
       totalShipJumpsLastHour: null,
+      totalShipKillsLastHour: null,
+      totalPodKillsLastHour: null,
       knownSystems,
       totalSystems,
       coverage: 0,
@@ -356,12 +289,24 @@ function routeTrafficFromSystems(systems: RouteSystem[]): RouteTrafficSummary {
   const { label, level } = trafficLevel(totalShipJumpsLastHour);
   return {
     totalShipJumpsLastHour,
+    totalShipKillsLastHour: sumOptionalRouteMetric(systems, "shipKillsLastHour"),
+    totalPodKillsLastHour: sumOptionalRouteMetric(systems, "podKillsLastHour"),
     knownSystems,
     totalSystems,
     coverage: Math.round((knownSystems / totalSystems) * 1000) / 1000,
     level,
     label,
   };
+}
+
+function sumOptionalRouteMetric(systems: RouteSystem[], key: "shipKillsLastHour" | "podKillsLastHour") {
+  const values = systems
+    .map((system) => system[key])
+    .filter((value): value is number => value !== null && value !== undefined);
+  if (values.length === 0) {
+    return null;
+  }
+  return values.reduce((total, value) => total + value, 0);
 }
 
 function trafficLevel(totalShipJumpsLastHour: number): Pick<RouteTrafficSummary, "label" | "level"> {

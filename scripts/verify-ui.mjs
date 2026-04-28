@@ -30,8 +30,11 @@ try {
   await desktop.getByRole("button", { name: "Discord Server coming soon" }).click();
   await expect(desktop.getByText("Coming soon")).toBeVisible();
   await desktop.waitForTimeout(1400);
-  await desktop.getByRole("button", { name: "Route Intel coming soon" }).click();
-  await expect(desktop.getByText("Coming soon")).toBeVisible();
+  await desktop.getByRole("link", { name: "Route Intel" }).click();
+  await expect(desktop.getByText("Temporary 404")).toBeVisible();
+  await expect(desktop.getByText("Route Intel is not active yet.")).toBeVisible();
+  await desktop.getByRole("link", { name: "Back to calculator" }).click();
+  await expect(desktop.getByText("Freight parameters")).toBeVisible();
   await expect(desktop.getByText("Run Readiness")).toHaveCount(0);
   await expect(desktop.locator(".site-footer").getByText("Premium freight desk for New Eden")).toBeVisible();
   await expect(desktop.locator(".speed-toggle").getByRole("button", { name: /Normal/i })).toBeVisible();
@@ -137,16 +140,17 @@ try {
     await expect(desktop.locator(".road-overview")).toBeVisible();
     await expect(desktop.getByText("Total jumps")).toBeVisible();
     await expect(desktop.getByText("Traffic", { exact: true })).toBeVisible();
-    await expect(desktop.getByText("Contract Acceptance", { exact: true })).toBeVisible();
-    await expect(desktop.getByText("EUTZ Time")).toBeVisible();
-    await expect(desktop.getByText("Paris")).toBeVisible();
+    await expect(desktop.getByText("Contract Acceptance", { exact: true })).toHaveCount(0);
+    await expect(desktop.getByText("EUTZ Time")).toHaveCount(0);
+    await expect(desktop.getByText("Paris")).toHaveCount(0);
     await expect(desktop.getByText("Route Risk")).toHaveCount(0);
     await expect(desktop.getByText("Golden Standard").first()).toBeVisible();
-    await expect(desktop.locator(".road-window-card small").filter({ hasText: /Night EUTZ|Day EUTZ|Prime EUTZ/i })).toBeVisible();
-    await expect(desktop.locator(".road-intel-card").getByText(/Low Activity|Medium Activity|High Activity/)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Ship jumps/i)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Ships destroyed/i)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Pods destroyed/i)).toBeVisible();
     await expect(desktop.locator(".road-intel-card").getByText(/Nominal|Watched|Hot|Flashpoint|Restricted|Unavailable|Verified/).first()).toBeVisible();
     await expect(desktop.getByText("Security", { exact: true })).toBeVisible();
-    await expect(desktop.locator(".road-intel-card small").filter({ hasText: /last hour/i })).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/last hour/i).first()).toBeVisible();
     await expect(desktop.locator(".road-system-cell").first()).toBeVisible({ timeout: 15000 });
     const roadCellCount = await desktop.locator(".road-system-cell").count();
     if (roadCellCount < 2) {

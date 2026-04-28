@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Construction } from "lucide-react";
 
 import { AppShell } from "./components/AppShell";
 import { DataPanel } from "./components/DataPanel";
@@ -102,6 +102,7 @@ type SizePlaceholderView = {
 };
 
 function App() {
+  const isRouteIntelPage = window.location.pathname === "/route-intel";
   const [input, setInput] = useState<QuoteInput>(initialInput);
   const [collateralText, setCollateralText] = useState("");
   const [quoteValidation, setQuoteValidation] = useState<QuoteValidation>(initialValidation);
@@ -442,9 +443,13 @@ function App() {
     <AppShell
       accentColor={SOLANE_UI_ACCENT}
       destinationColor={SOLANE_UI_ACCENT}
-      routeVisible={layoutHasRoadOverview}
+      routeVisible={layoutHasRoadOverview && !isRouteIntelPage}
       serviceLabel="Solane"
     >
+      {isRouteIntelPage ? (
+        <RouteIntelPage />
+      ) : (
+        <>
       <section
         className={`mission-console ${layoutHasRoadOverview ? "mission-console-with-route" : ""}`}
         id="calculator"
@@ -537,13 +542,13 @@ function App() {
             closing={roadOverviewView.closing}
             input={roadOverviewView.input}
             route={roadOverviewView.route}
-            serviceWindow={serviceWindow}
           />
         ) : null}
 
         <QuotePanel
           input={input}
           result={quote}
+          serviceWindow={serviceWindow}
         />
       </section>
 
@@ -552,8 +557,33 @@ function App() {
         <span>Premium freight desk for New Eden</span>
         <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
       </footer>
+        </>
+      )}
     </AppShell>
   );
 }
 
 export default App;
+
+function RouteIntelPage() {
+  return (
+    <>
+      <section className="route-intel-page" aria-labelledby="route-intel-title">
+        <div className="route-intel-panel">
+          <Construction aria-hidden="true" size={24} />
+          <span>Temporary 404</span>
+          <h1 id="route-intel-title">Route Intel is not active yet.</h1>
+          <p>
+            This cockpit is being prepared for New Eden haulers.
+          </p>
+          <a href="/">Back to calculator</a>
+        </div>
+      </section>
+      <footer className="site-footer">
+        <strong>Solane Run</strong>
+        <span>Premium freight desk for New Eden</span>
+        <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
+      </footer>
+    </>
+  );
+}

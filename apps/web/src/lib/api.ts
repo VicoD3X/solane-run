@@ -44,6 +44,12 @@ export async function fetchEsiRoute(originId: number, destinationId: number): Pr
       coverage: sanitizeFiniteNumber(route.routeTraffic.coverage),
       knownSystems: sanitizePositiveInteger(route.routeTraffic.knownSystems),
       ...normalizeRouteTrafficLevel(route.routeTraffic.level),
+      totalPodKillsLastHour: route.routeTraffic.totalPodKillsLastHour === null || route.routeTraffic.totalPodKillsLastHour === undefined
+        ? null
+        : sanitizePositiveInteger(route.routeTraffic.totalPodKillsLastHour),
+      totalShipKillsLastHour: route.routeTraffic.totalShipKillsLastHour === null || route.routeTraffic.totalShipKillsLastHour === undefined
+        ? null
+        : sanitizePositiveInteger(route.routeTraffic.totalShipKillsLastHour),
       totalShipJumpsLastHour: route.routeTraffic.totalShipJumpsLastHour === null
         ? null
         : sanitizePositiveInteger(route.routeTraffic.totalShipJumpsLastHour),
@@ -188,6 +194,12 @@ function normalizeRouteSystem(value: unknown): RouteResult["routeSystems"][numbe
     name: sanitizeApiText(system.name),
     securityDisplay: system.securityDisplay ? sanitizeApiText(system.securityDisplay) : null,
     serviceType: system.serviceType ? sanitizeApiText(system.serviceType) : null,
+    podKillsLastHour: system.podKillsLastHour === null || system.podKillsLastHour === undefined
+      ? null
+      : sanitizePositiveInteger(system.podKillsLastHour),
+    shipKillsLastHour: system.shipKillsLastHour === null || system.shipKillsLastHour === undefined
+      ? null
+      : sanitizePositiveInteger(system.shipKillsLastHour),
     shipJumpsLastHour: system.shipJumpsLastHour === null || system.shipJumpsLastHour === undefined
       ? null
       : sanitizePositiveInteger(system.shipJumpsLastHour),

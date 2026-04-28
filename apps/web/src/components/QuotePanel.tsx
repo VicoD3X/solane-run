@@ -2,22 +2,24 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { AlertTriangle, Building2, Check, CircleDollarSign, Clock3, Copy, Gauge, PackageCheck, Route, Timer } from "lucide-react";
 
-import type { QuoteInput, QuoteResult } from "../types";
+import type { QuoteInput, QuoteResult, ServiceWindowSummary } from "../types";
 import { labelForSize, labelForSpeed } from "../data/quote";
 import { formatFullIsk } from "../lib/format";
 
 type QuotePanelProps = {
   input: QuoteInput;
   result: QuoteResult;
+  serviceWindow: ServiceWindowSummary;
 };
 
-export function QuotePanel({ input, result }: QuotePanelProps) {
+export function QuotePanel({ input, result, serviceWindow }: QuotePanelProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [routeMetaView, setRouteMetaView] = useState<{ closing: boolean; value: string } | null>(null);
   const speedLabel = labelForSpeed(input.speed);
   const isTransientPricingSync = result.source === "local" && result.blockedCode === "pricing_unavailable";
   const displayedBlockedReason = isTransientPricingSync ? undefined : result.blockedReason;
   const isSoftBlock = result.blockedCode === "minimum_collateral";
+  const isRiskRestricted = result.blockedCode === "risk_restricted";
   const isBlocked = Boolean(displayedBlockedReason);
   const isStrongBlock = isBlocked && !isSoftBlock;
   const rewardHidden = isTransientPricingSync || result.blockedCode === "missing_collateral" || result.blockedCode === "minimum_collateral" || input.collateral < 10_000_000;
@@ -28,6 +30,9 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   const routeValue = `${result.route.jumps} jumps`;
   const routePair = input.pickup && input.destination
     ? `${input.pickup.name} - ${input.destination.name}`
+    : null;
+  const serviceWindowWarning = input.speed === "rush" && serviceWindow.level !== "high_activity"
+    ? rushWindowWarning(serviceWindow)
     : null;
 
   useEffect(() => {
@@ -59,7 +64,7 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   };
 
   return (
-    <aside className={`quote-panel ${isStrongBlock ? "quote-panel-blocked" : ""}`} id="pricing">
+    <aside className={`quote-panel ${isStrongBlock ? "quote-panel-blocked" : ""} ${isRiskRestricted ? "quote-panel-restricted" : ""}`} id="pricing">
       <div className="quote-head">
         <strong>Contract Review</strong>
       </div>
@@ -127,8 +132,24 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
         />
       </div>
 
+      {isRiskRestricted ? (
+        <p className="quote-context-warning quote-context-warning-danger">
+          Restricted route. Contract review is blocked by Solane risk controls.
+        </p>
+      ) : serviceWindowWarning ? (
+        <p className="quote-context-warning">
+          {serviceWindowWarning}
+        </p>
+      ) : null}
     </aside>
   );
+}
+
+function rushWindowWarning(serviceWindow: ServiceWindowSummary) {
+  if (serviceWindow.level === "low_activity") {
+    return "Rush during Low Activity may be accepted slower.";
+  }
+  return "Rush during Medium Activity may vary.";
 }
 
 function blockedReasonTitle(code: QuoteResult["blockedCode"]) {

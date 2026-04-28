@@ -112,7 +112,7 @@ try {
   await expect(desktop.locator(".contract-packet").getByText("2,500,000,000 ISK")).toBeVisible();
   await desktop.getByRole("textbox", { name: "Collateral" }).fill("6000000000");
   await expect(desktop.getByRole("textbox", { name: "Collateral" })).toHaveValue("6 000 000 000");
-  await expect(desktop.getByRole("status")).toHaveText("Collateral limit exceeded. Maximum allowed is 5,000,000,000 ISK.");
+  await expect(desktop.getByRole("status")).toContainText("Collateral limit exceeded. Maximum allowed is 5,000,000,000 ISK.");
   await expect(desktop.locator(".contract-packet").getByText("Blocked")).toBeVisible();
   await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toHaveCount(0);
   await desktop.getByRole("textbox", { name: "Collateral" }).fill("200000000");
@@ -144,7 +144,7 @@ try {
     await expect(desktop.getByText("Contract Acceptance")).toBeVisible();
     await expect(desktop.getByText("Route Risk")).toBeVisible();
     await expect(desktop.getByText(/Corp queue (synced|syncing)/i)).toBeVisible();
-    await expect(desktop.locator(".road-intel-card").getByText(/Express|Fast|Normal|Slower|Extended|Syncing/)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Express|Fast|Normal|Slower|Extended|Standby|Syncing/)).toBeVisible();
     await expect(desktop.locator(".road-intel-card").getByText(/Nominal|Watched|Hot|Flashpoint|Restricted|Unavailable/)).toBeVisible();
     await expect(desktop.getByText("Security bands")).toBeVisible();
     await expect(desktop.locator(".road-intel-card small").filter({ hasText: /jumps last hour/i })).toBeVisible();
@@ -166,7 +166,7 @@ try {
       return !text.includes("Rewards0 ISK") && !text.includes("Blocked");
     }, null, { timeout: 15000 });
     await desktop.locator(".speed-toggle").getByRole("button", { name: /Normal/i }).click();
-    await expect(desktop.locator(".quote-lock-message")).toHaveText("Rush pricing is coming soon.", { timeout: 15000 });
+    await expect(desktop.locator(".quote-lock-message")).toContainText("Rush pricing is coming soon.", { timeout: 15000 });
     await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toHaveCount(0);
     await desktop.locator(".speed-toggle").getByRole("button", { name: /Rush/i }).click();
     await expect(desktop.locator(".quote-lock-message")).toHaveCount(0, { timeout: 15000 });
@@ -174,7 +174,7 @@ try {
     await expect(desktop.locator(".contract-packet").getByText("800,000 m3")).toBeVisible();
     await expect(desktop.getByText("3 500 000 000 ISK")).toBeVisible({ timeout: 15000 });
     await desktop.getByRole("textbox", { name: "Collateral" }).fill("4000000000");
-    await expect(desktop.getByRole("status")).toHaveText("Collateral limit exceeded. Maximum allowed is 3,500,000,000 ISK.", { timeout: 15000 });
+    await expect(desktop.getByRole("status")).toContainText("Collateral limit exceeded. Maximum allowed is 3,500,000,000 ISK.", { timeout: 15000 });
     await desktop.getByRole("textbox", { name: "Collateral" }).fill("200000000");
     await desktop.waitForFunction(() => {
       const text = document.querySelector(".contract-packet")?.textContent ?? "";

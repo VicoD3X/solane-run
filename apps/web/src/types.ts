@@ -83,14 +83,14 @@ export type RouteRiskSummary = {
   trend?: RouteRiskTrend | null;
 };
 
-export type ContractAcceptanceLevel = "express" | "fast" | "normal" | "slower" | "extended" | "syncing";
+export type ContractAcceptanceLevel = "express" | "fast" | "normal" | "slower" | "extended" | "standby" | "syncing";
 
 export type ContractAcceptanceSummary = {
   level: ContractAcceptanceLevel;
-  label: "Express" | "Fast" | "Normal" | "Slower" | "Extended" | "Syncing";
+  label: "Express" | "Fast" | "Normal" | "Slower" | "Extended" | "Standby" | "Syncing";
   lastSyncedAt: string | null;
   isFresh: boolean;
-  source: "corp-contracts" | "syncing";
+  source: "corp-contracts" | "schedule" | "syncing";
 };
 
 export type RouteResult = {

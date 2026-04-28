@@ -66,7 +66,7 @@ export async function fetchContractAcceptance(): Promise<ContractAcceptanceSumma
     label: acceptanceLevel.label,
     lastSyncedAt: acceptance.lastSyncedAt,
     level: acceptanceLevel.level,
-    source: acceptance.source === "corp-contracts" ? "corp-contracts" : "syncing",
+    source: normalizeContractAcceptanceSource(acceptance.source),
   };
 }
 
@@ -288,7 +288,17 @@ function normalizeContractAcceptanceLevel(value: unknown): Pick<ContractAcceptan
   if (value === "extended") {
     return { label: "Extended", level: "extended" };
   }
+  if (value === "standby") {
+    return { label: "Standby", level: "standby" };
+  }
   return { label: "Syncing", level: "syncing" };
+}
+
+function normalizeContractAcceptanceSource(value: unknown): ContractAcceptanceSummary["source"] {
+  if (value === "corp-contracts" || value === "schedule") {
+    return value;
+  }
+  return "syncing";
 }
 
 function normalizeQuoteValidation(value: unknown): QuoteValidation {

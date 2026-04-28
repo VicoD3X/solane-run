@@ -159,6 +159,18 @@ When private ESI is not configured or unavailable, the API should return:
 }
 ```
 
+Outside the weekday EUTZ acceptance window, the API may return a static schedule state:
+
+```json
+{
+  "level": "standby",
+  "label": "Standby",
+  "lastSyncedAt": "2026-04-28T02:30:00Z",
+  "isFresh": false,
+  "source": "schedule"
+}
+```
+
 The frontend must not infer or publish the underlying queue formula.
 
 ## Quote Validation
@@ -254,6 +266,8 @@ Expected response shape:
 ```
 
 When pricing is unavailable or the selected speed is not supported, `valid` is `false`, `reward` is `0`, and `blockedReason` contains a display-safe message. The frontend must not duplicate or publish pricing formulas.
+
+When collateral is below the private API minimum, `valid` is `false`, `reward` is `0`, and the frontend should display the `blockedReason` without rendering a copyable reward.
 
 When `risk.isBlocking` is `true`, the frontend must display the blocked state directly and must not try to bypass it locally.
 

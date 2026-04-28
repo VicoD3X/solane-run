@@ -62,12 +62,9 @@ export function RouteOverview({ acceptance, closing = false, input, route }: Rou
           label="Contract Acceptance"
           value={acceptance.label}
         />
-        <RoadIntelMetric
-          detail={riskDetail(routeRisk)}
+        <RouteRiskReport
           icon={<ShieldAlert size={15} />}
-          tone={`road-risk-${routeRisk.level}`}
-          label="Route Risk"
-          value={routeRisk.label}
+          risk={routeRisk}
         />
       </div>
 
@@ -121,6 +118,45 @@ function RoadIntelMetric({
       </span>
       <strong>{value}</strong>
       <small>{detail}</small>
+    </div>
+  );
+}
+
+function RouteRiskReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSummary }) {
+  const affected = risk.affectedSystems.slice(0, 5);
+  const hiddenCount = Math.max(risk.affectedSystems.length - affected.length, 0);
+
+  return (
+    <div className={`road-intel-card road-risk-report road-risk-${risk.level}`}>
+      <span>
+        {icon}
+        <b>Route Risk</b>
+      </span>
+      <strong>{risk.label}</strong>
+      <p>{risk.reason ?? "Risk telemetry is being evaluated."}</p>
+      <div className="road-risk-meta" aria-label="Route risk details">
+        {affected.length > 0 ? (
+          <span>
+            Systems
+            <b>{affected.map((system) => system.name).join(", ")}{hiddenCount > 0 ? ` +${hiddenCount}` : ""}</b>
+          </span>
+        ) : (
+          <span>
+            Systems
+            <b>No flagged system</b>
+          </span>
+        )}
+        <span>
+          Signal
+          <b>{risk.confidence}</b>
+        </span>
+        {risk.trend && risk.trend !== "unavailable" ? (
+          <span>
+            Baseline
+            <b>{risk.trend}</b>
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -192,6 +228,9 @@ function trafficDetail(traffic: RouteTrafficSummary) {
 }
 
 function acceptanceDetail(acceptance: ContractAcceptanceSummary) {
+  if (acceptance.source === "schedule") {
+    return "Outside EUTZ window";
+  }
   return acceptance.isFresh && acceptance.source === "corp-contracts"
     ? "Corp queue synced"
     : "Corp queue syncing";
@@ -254,21 +293,6 @@ function fallbackRouteRisk(): RouteRiskSummary {
     reason: "Risk telemetry unavailable.",
     trend: "unavailable",
   };
-}
-
-function riskDetail(risk: RouteRiskSummary) {
-  if (risk.affectedSystems.length > 0) {
-    const names = risk.affectedSystems.slice(0, 3).map((system) => system.name).join(", ");
-    const suffix = risk.affectedSystems.length > 3 ? " +" : "";
-    return `${names}${suffix} - ${risk.confidence}`;
-  }
-  if (risk.trend && risk.trend !== "stable" && risk.trend !== "unavailable") {
-    return `${risk.trend} baseline - ${risk.confidence}`;
-  }
-  if (risk.reason) {
-    return `${risk.reason} - ${risk.confidence}`;
-  }
-  return risk.confidence;
 }
 
 function legendItems(systems: RouteSystem[]) {

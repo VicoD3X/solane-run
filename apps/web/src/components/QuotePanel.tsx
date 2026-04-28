@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Building2, Check, CircleDollarSign, Clock3, Copy, Gauge, PackageCheck, Route, Timer } from "lucide-react";
+import { AlertTriangle, Building2, Check, CircleDollarSign, Clock3, Copy, Gauge, PackageCheck, Route, Timer } from "lucide-react";
 
 import type { QuoteInput, QuoteResult } from "../types";
 import { labelForSize, labelForSpeed } from "../data/quote";
@@ -16,6 +16,7 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   const [routeMetaView, setRouteMetaView] = useState<{ closing: boolean; value: string } | null>(null);
   const speedLabel = labelForSpeed(input.speed);
   const isBlocked = Boolean(result.blockedReason);
+  const rewardHidden = isMinimumCollateralBlock(result.blockedReason);
   const reward = isBlocked ? "Blocked" : formatFullIsk(result.estimate);
   const collateral = formatFullIsk(input.collateral);
   const deadline = input.speed === "rush" ? "1 day" : "3 days";
@@ -60,9 +61,13 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
       </div>
 
       {result.blockedReason ? (
-        <p className="quote-lock-message" role="status">
-          {result.blockedReason}
-        </p>
+        <div className="quote-lock-message" role="status">
+          <AlertTriangle size={17} />
+          <span>
+            <b>{blockedReasonTitle(result.blockedReason)}</b>
+            <small>{result.blockedReason}</small>
+          </span>
+        </div>
       ) : null}
 
       <div className="contract-packet contract-review-table">
@@ -97,13 +102,15 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
           onCopy={() => copyValue("collateral", collateral)}
           value={collateral}
         />
-        <PacketRow
-          copied={copiedKey === "reward"}
-          icon={<CircleDollarSign size={17} />}
-          label="Rewards"
-          onCopy={isBlocked ? undefined : () => copyValue("reward", reward)}
-          value={reward}
-        />
+        {!rewardHidden ? (
+          <PacketRow
+            copied={copiedKey === "reward"}
+            icon={<CircleDollarSign size={17} />}
+            label="Rewards"
+            onCopy={isBlocked ? undefined : () => copyValue("reward", reward)}
+            value={reward}
+          />
+        ) : null}
         <PacketRow
           icon={<Clock3 size={17} />}
           label="Expiration"
@@ -118,6 +125,23 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
 
     </aside>
   );
+}
+
+function blockedReasonTitle(reason: string) {
+  if (isMinimumCollateralBlock(reason)) {
+    return "Risk desk minimum";
+  }
+  if (reason.toLowerCase().includes("risk controls")) {
+    return "Route restricted";
+  }
+  if (reason.toLowerCase().includes("collateral")) {
+    return "Collateral limit";
+  }
+  return "Quote blocked";
+}
+
+function isMinimumCollateralBlock(reason: string | null | undefined) {
+  return reason?.toLowerCase().includes("minimum collateral") ?? false;
 }
 
 function PacketRow({

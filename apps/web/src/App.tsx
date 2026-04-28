@@ -20,9 +20,9 @@ import {
   validateCollateral,
   volumeForSize,
 } from "./data/quote";
-import { fetchContractAcceptance, fetchEsiRoute, fetchQuoteCalculation } from "./lib/api";
+import { fetchEsiRoute, fetchQuoteCalculation, fetchServiceWindow } from "./lib/api";
 import { formatIskInput, formatIskInputText, parseIskInput } from "./lib/format";
-import type { CargoSize, ContractAcceptanceSummary, QuoteInput, QuotePricing, QuoteResult, QuoteValidation, RouteResult, RunSpeed } from "./types";
+import type { CargoSize, QuoteInput, QuotePricing, QuoteResult, QuoteValidation, RouteResult, RunSpeed, ServiceWindowSummary } from "./types";
 
 const initialInput: QuoteInput = {
   pickup: null,
@@ -36,13 +36,56 @@ const initialInput: QuoteInput = {
 const initialRoute = fallbackRoute(initialInput);
 const initialValidation = fallbackQuoteValidation(initialInput);
 const SOLANE_UI_ACCENT = "#a855f7";
-const syncingContractAcceptance: ContractAcceptanceSummary = {
-  level: "syncing",
-  label: "Syncing",
-  lastSyncedAt: null,
-  isFresh: false,
-  source: "syncing",
-};
+const MIN_COLLATERAL_FOR_REWARD = 10_000_000;
+
+function parisHour(now: Date) {
+  try {
+    return Number(
+      new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: "Europe/Paris",
+      }).format(now),
+    );
+  } catch {
+    return 18;
+  }
+}
+
+function serviceWindowFallback(now = new Date()): ServiceWindowSummary {
+  const hour = parisHour(now);
+
+  if (hour >= 23 || hour < 8) {
+    return {
+      detail: "Night EUTZ",
+      level: "low_activity",
+      label: "Low Activity",
+      lastSyncedAt: null,
+      isFresh: false,
+      source: "schedule",
+    };
+  }
+
+  if (hour < 17) {
+    return {
+      detail: "Day EUTZ",
+      level: "medium_activity",
+      label: "Medium Activity",
+      lastSyncedAt: null,
+      isFresh: false,
+      source: "schedule",
+    };
+  }
+
+  return {
+    detail: "Prime EUTZ",
+    level: "high_activity",
+    label: "High Activity",
+    lastSyncedAt: null,
+    isFresh: false,
+    source: "schedule",
+  };
+}
 
 type RoadOverviewView = {
   closing: boolean;
@@ -66,7 +109,7 @@ function App() {
   const [roadOverviewView, setRoadOverviewView] = useState<RoadOverviewView | null>(null);
   const [sizeSelectorView, setSizeSelectorView] = useState<SizeSelectorView | null>(null);
   const [sizePlaceholderView, setSizePlaceholderView] = useState<SizePlaceholderView | null>({ closing: false });
-  const [contractAcceptance, setContractAcceptance] = useState(syncingContractAcceptance);
+  const [serviceWindow, setServiceWindow] = useState(() => serviceWindowFallback());
   const [, setIsSyncing] = useState(false);
   const inputRef = useRef(input);
   const quoteRef = useRef(quote);
@@ -185,6 +228,30 @@ function App() {
       return;
     }
 
+    const collateralEntered = collateralText.trim().length > 0;
+    const pricingInput = collateralEntered
+      ? input
+      : {
+          ...input,
+          collateral: MIN_COLLATERAL_FOR_REWARD,
+        };
+
+    const quoteForDisplay = (route: RouteResult, pricing: QuotePricing): QuoteResult => {
+      if (collateralEntered) {
+        return quoteFromPricing(route, pricing);
+      }
+
+      return {
+        route,
+        estimate: 0,
+        blockedCode: "missing_collateral",
+        currency: "ISK",
+        pricingLabel: "Awaiting collateral",
+        pricingMode: "blocked",
+        source: "api",
+      };
+    };
+
     const applyPricing = (pricing: QuotePricing) => {
       if (validationRequestRef.current !== requestId) {
         return;
@@ -203,6 +270,7 @@ function App() {
       const nextValidation = shouldCorrectSize
         ? {
             ...pricing,
+            blockedCode: collateralWithinLimit ? null : "collateral_limit" as const,
             blockedReason: collateralWithinLimit
               ? null
               : `Collateral limit exceeded. Maximum allowed is ${pricing.maxCollateral.toLocaleString("en-US")} ISK.`,
@@ -214,8 +282,7 @@ function App() {
       if (shouldCorrectSize) {
         setInput(nextInput);
         setQuoteValidation(nextValidation);
-        setQuote((currentQuote) => calculateQuote(
-          nextInput,
+        setQuote((currentQuote) => quoteForDisplay(
           currentQuote.route.source === "esi" ? currentQuote.route : fallbackRoute(nextInput),
           nextValidation,
         ));
@@ -223,7 +290,7 @@ function App() {
       }
 
       setQuoteValidation(nextValidation);
-      setQuote((currentQuote) => quoteFromPricing(
+      setQuote((currentQuote) => quoteForDisplay(
         currentQuote.route.source === "esi" ? currentQuote.route : fallbackRoute(nextInput),
         pricing,
       ));
@@ -234,36 +301,47 @@ function App() {
         return;
       }
       setQuoteValidation(localValidation);
-      setQuote((currentQuote) => calculateQuote(
-        input,
-        currentQuote.route.source === "esi" ? currentQuote.route : fallbackRoute(input),
-        localValidation,
-      ));
+      setQuote((currentQuote) => {
+        const route = currentQuote.route.source === "esi" ? currentQuote.route : fallbackRoute(input);
+        if (!collateralEntered) {
+          return {
+            route,
+            estimate: 0,
+            blockedCode: "missing_collateral",
+            currency: "ISK",
+            pricingLabel: "Awaiting collateral",
+            pricingMode: "blocked",
+            source: "local",
+          };
+        }
+
+        return calculateQuote(input, route, localValidation);
+      });
     };
 
-    void fetchQuoteCalculation(input)
+    void fetchQuoteCalculation(pricingInput)
       .then(applyPricing)
       .catch(applyFallback);
-  }, [input]);
+  }, [collateralText, input]);
 
   useEffect(() => {
     let mounted = true;
 
-    const refreshContractAcceptance = async () => {
+    const refreshServiceWindow = async () => {
       try {
-        const nextAcceptance = await fetchContractAcceptance();
+        const nextServiceWindow = await fetchServiceWindow();
         if (mounted) {
-          setContractAcceptance(nextAcceptance);
+          setServiceWindow(nextServiceWindow);
         }
       } catch {
         if (mounted) {
-          setContractAcceptance(syncingContractAcceptance);
+          setServiceWindow(serviceWindowFallback());
         }
       }
     };
 
-    void refreshContractAcceptance();
-    const interval = window.setInterval(refreshContractAcceptance, 300_000);
+    void refreshServiceWindow();
+    const interval = window.setInterval(refreshServiceWindow, 300_000);
 
     return () => {
       mounted = false;
@@ -456,10 +534,10 @@ function App() {
 
         {roadOverviewView ? (
           <RouteOverview
-            acceptance={contractAcceptance}
             closing={roadOverviewView.closing}
             input={roadOverviewView.input}
             route={roadOverviewView.route}
+            serviceWindow={serviceWindow}
           />
         ) : null}
 

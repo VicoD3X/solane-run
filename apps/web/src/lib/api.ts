@@ -1,4 +1,4 @@
-import type { ContractAcceptanceSummary, CargoSize, PricingMode, QuoteInput, QuotePricing, QuoteValidation, RouteResult, SolarSystem } from "../types";
+import type { CargoSize, PricingMode, QuoteInput, QuotePricing, QuoteValidation, RouteResult, ServiceWindowSummary, SolarSystem } from "../types";
 import { sanitizeApiText, sanitizeFiniteNumber, sanitizeHexColor, sanitizePositiveInteger, sanitizeSystemQuery } from "./guards";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001";
@@ -58,15 +58,16 @@ export async function fetchEsiStatus(): Promise<EsiStatus> {
   return getJson<EsiStatus>("/api/eve/status");
 }
 
-export async function fetchContractAcceptance(): Promise<ContractAcceptanceSummary> {
-  const acceptance = await getJson<ContractAcceptanceSummary>("/api/solane/contract-acceptance");
-  const acceptanceLevel = normalizeContractAcceptanceLevel(acceptance.level);
+export async function fetchServiceWindow(): Promise<ServiceWindowSummary> {
+  const serviceWindow = await getJson<ServiceWindowSummary>("/api/solane/service-window");
+  const serviceLevel = normalizeServiceWindowLevel(serviceWindow.level);
   return {
-    isFresh: Boolean(acceptance.isFresh),
-    label: acceptanceLevel.label,
-    lastSyncedAt: acceptance.lastSyncedAt,
-    level: acceptanceLevel.level,
-    source: normalizeContractAcceptanceSource(acceptance.source),
+    detail: normalizeServiceWindowDetail(serviceWindow.detail),
+    isFresh: Boolean(serviceWindow.isFresh),
+    label: serviceLevel.label,
+    lastSyncedAt: serviceWindow.lastSyncedAt,
+    level: serviceLevel.level,
+    source: "schedule",
   };
 }
 
@@ -234,7 +235,12 @@ function normalizeRouteRisk(value: unknown): RouteResult["routeRisk"] {
     label: riskLevel.label,
     lastSyncedAt: typeof value.lastSyncedAt === "string" ? sanitizeApiText(value.lastSyncedAt) : null,
     level: riskLevel.level,
+    lowSecShipKillsLastHour: value.lowSecShipKillsLastHour === null || value.lowSecShipKillsLastHour === undefined
+      ? null
+      : sanitizePositiveInteger(value.lowSecShipKillsLastHour),
     reason: typeof value.reason === "string" ? sanitizeApiText(value.reason) : null,
+    routeStandard: value.routeStandard === "golden" ? "golden" : "standard",
+    routeStandardLabel: value.routeStandard === "golden" ? "Golden Standard" : "Standard Route",
     trend: normalizeRouteRiskTrend(value.trend),
   };
 }
@@ -272,33 +278,24 @@ function normalizeRouteRiskTrend(value: unknown): NonNullable<RouteResult["route
   return null;
 }
 
-function normalizeContractAcceptanceLevel(value: unknown): Pick<ContractAcceptanceSummary, "label" | "level"> {
-  if (value === "express") {
-    return { label: "Express", level: "express" };
+function normalizeServiceWindowLevel(value: unknown): Pick<ServiceWindowSummary, "label" | "level"> {
+  if (value === "low_activity") {
+    return { label: "Low Activity", level: "low_activity" };
   }
-  if (value === "fast") {
-    return { label: "Fast", level: "fast" };
+  if (value === "medium_activity" || value === "variable_activity") {
+    return { label: "Medium Activity", level: "medium_activity" };
   }
-  if (value === "normal") {
-    return { label: "Normal", level: "normal" };
+  if (value === "high_activity") {
+    return { label: "High Activity", level: "high_activity" };
   }
-  if (value === "slower") {
-    return { label: "Slower", level: "slower" };
-  }
-  if (value === "extended") {
-    return { label: "Extended", level: "extended" };
-  }
-  if (value === "standby") {
-    return { label: "Standby", level: "standby" };
-  }
-  return { label: "Syncing", level: "syncing" };
+  return { label: "Medium Activity", level: "medium_activity" };
 }
 
-function normalizeContractAcceptanceSource(value: unknown): ContractAcceptanceSummary["source"] {
-  if (value === "corp-contracts" || value === "schedule") {
+function normalizeServiceWindowDetail(value: unknown): ServiceWindowSummary["detail"] {
+  if (value === "Night EUTZ" || value === "Day EUTZ" || value === "Prime EUTZ") {
     return value;
   }
-  return "syncing";
+  return "Day EUTZ";
 }
 
 function normalizeQuoteValidation(value: unknown): QuoteValidation {
@@ -309,6 +306,7 @@ function normalizeQuoteValidation(value: unknown): QuoteValidation {
 
   return {
     allowedSizes,
+    blockedCode: normalizeBlockedCode(validation.blockedCode),
     blockedReason: typeof validation.blockedReason === "string" ? sanitizeApiText(validation.blockedReason) : null,
     maxCollateral: sanitizePositiveInteger(validation.maxCollateral, 5_000_000_000),
     risk: normalizeRouteRisk(validation.risk),
@@ -335,10 +333,25 @@ function normalizeQuotePricing(value: unknown): QuotePricing {
 }
 
 function normalizePricingMode(value: unknown): PricingMode {
-  if (value === "fixed" || value === "per_jump" || value === "blocked") {
+  if (value === "fixed" || value === "per_jump" || value === "hybrid" || value === "blocked") {
     return value;
   }
   return "blocked";
+}
+
+function normalizeBlockedCode(value: unknown): QuoteValidation["blockedCode"] {
+  if (
+    value === "missing_collateral" ||
+    value === "minimum_collateral" ||
+    value === "collateral_limit" ||
+    value === "size_unavailable" ||
+    value === "risk_restricted" ||
+    value === "route_unavailable" ||
+    value === "pricing_unavailable"
+  ) {
+    return value;
+  }
+  return null;
 }
 
 function isCargoSize(value: unknown): value is CargoSize {

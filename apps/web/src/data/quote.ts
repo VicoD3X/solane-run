@@ -72,14 +72,18 @@ export function fallbackQuoteValidation(
   const collateralValid = input.collateral <= maxCollateral;
 
   let blockedReason: string | null = null;
+  let blockedCode: QuoteValidation["blockedCode"] = null;
   if (!selectedSizeValid) {
     blockedReason = "Selected cargo size is not available for this route.";
+    blockedCode = "size_unavailable";
   } else if (!collateralValid) {
     blockedReason = `Collateral limit exceeded. Maximum allowed is ${maxCollateral.toLocaleString("en-US")} ISK.`;
+    blockedCode = "collateral_limit";
   }
 
   return {
     allowedSizes,
+    blockedCode,
     blockedReason,
     maxCollateral,
     selectedSizeValid,
@@ -170,6 +174,7 @@ export function calculateQuote(input: QuoteInput, route: RouteResult, validation
       route,
       estimate: 0,
       blockedReason: validation.blockedReason ?? "Quote blocked by Solane Engine guardrails.",
+      blockedCode: validation.blockedCode ?? "pricing_unavailable",
       currency: "ISK",
       pricingLabel: "Blocked",
       pricingMode: "blocked",
@@ -182,6 +187,7 @@ export function calculateQuote(input: QuoteInput, route: RouteResult, validation
       route,
       estimate: 0,
       blockedReason: "Pricing sync unavailable.",
+      blockedCode: "pricing_unavailable",
       currency: "ISK",
       pricingLabel: "Blocked",
       pricingMode: "blocked",
@@ -203,6 +209,7 @@ export function quoteFromPricing(route: RouteResult, pricing: QuotePricing): Quo
   return {
     route,
     estimate: pricing.reward,
+    blockedCode: pricing.blockedCode ?? undefined,
     blockedReason: pricing.blockedReason ?? undefined,
     currency: pricing.currency,
     pricingLabel: pricing.pricingLabel,

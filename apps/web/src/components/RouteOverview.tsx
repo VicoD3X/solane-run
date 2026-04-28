@@ -1,29 +1,31 @@
+import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Clock3, Radar, Shield, ShieldAlert, Waypoints } from "lucide-react";
+import { BadgeCheck, Clock3, Radar, Shield, ShieldAlert, Waypoints } from "lucide-react";
 
 import type {
-  ContractAcceptanceSummary,
   QuoteInput,
   RouteResult,
   RouteRiskSummary,
   RouteSystem,
   RouteTrafficSummary,
+  ServiceWindowSummary,
   SolarSystem,
 } from "../types";
 
 type RouteOverviewProps = {
-  acceptance: ContractAcceptanceSummary;
   closing?: boolean;
   input: QuoteInput;
   route: RouteResult;
+  serviceWindow: ServiceWindowSummary;
 };
 
 const fallbackColor = "#8393a3";
 
-export function RouteOverview({ acceptance, closing = false, input, route }: RouteOverviewProps) {
+export function RouteOverview({ closing = false, input, route, serviceWindow }: RouteOverviewProps) {
   const systems = route.routeSystems.length > 0 ? route.routeSystems : fallbackSystems(input);
   const routeTraffic = route.routeTraffic ?? routeTrafficFromSystems(systems);
   const routeRisk = route.routeRisk ?? fallbackRouteRisk();
+  const eutzTime = useParisClock();
   const routeLabel = input.pickup && input.destination
     ? `${input.pickup.name} - ${input.destination.name}`
     : "Awaiting endpoints";
@@ -36,7 +38,7 @@ export function RouteOverview({ acceptance, closing = false, input, route }: Rou
     >
       <div className="road-overview-scan" aria-hidden="true" />
       <header className="road-overview-header">
-        <div>
+        <div className="road-title-block">
           <span>Road Overview</span>
           <h2 id="road-overview-title">{routeLabel}</h2>
         </div>
@@ -48,24 +50,29 @@ export function RouteOverview({ acceptance, closing = false, input, route }: Rou
       </header>
 
       <div className="road-intel-grid" aria-label="Route intelligence">
-        <RoadIntelMetric
+        <RouteTrafficMetric
           detail={trafficDetail(routeTraffic)}
           icon={<Radar size={15} />}
           tone={`road-traffic-${routeTraffic.level}`}
-          label="Route Traffic"
+          label="Traffic"
           value={routeTraffic.label}
         />
-        <RoadIntelMetric
-          detail={acceptanceDetail(acceptance)}
+        <ServiceWindowMetric
+          detail={serviceWindow.detail}
+          eutzTime={eutzTime}
           icon={<Clock3 size={15} />}
-          tone={`road-acceptance-${acceptance.level}`}
+          tone={`road-window-${serviceWindow.level}`}
           label="Contract Acceptance"
-          value={acceptance.label}
+          value={serviceWindow.label}
         />
-        <RouteRiskReport
-          icon={<ShieldAlert size={15} />}
-          risk={routeRisk}
-        />
+        {routeRisk.routeStandard === "golden" && !routeRisk.isBlocking ? (
+          <GoldenStandardReport icon={<BadgeCheck size={15} />} risk={routeRisk} />
+        ) : (
+          <RouteRiskReport
+            icon={<ShieldAlert size={15} />}
+            risk={routeRisk}
+          />
+        )}
       </div>
 
       <div className="road-overview-strip" aria-label="Route security timeline">
@@ -82,7 +89,7 @@ export function RouteOverview({ acceptance, closing = false, input, route }: Rou
       <footer className="road-overview-footer">
         <span>
           <Shield size={14} />
-          Security bands
+          Security
         </span>
         <ul aria-label="Route service color legend">
           {legendItems(systems).map((item) => (
@@ -97,7 +104,7 @@ export function RouteOverview({ acceptance, closing = false, input, route }: Rou
   );
 }
 
-function RoadIntelMetric({
+function RouteTrafficMetric({
   detail,
   icon,
   label,
@@ -111,13 +118,55 @@ function RoadIntelMetric({
   value: string;
 }) {
   return (
-    <div className={`road-intel-card ${tone ?? ""}`}>
-      <span>
-        {icon}
-        <b>{label}</b>
-      </span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
+    <div className={`road-intel-card road-traffic-card ${tone ?? ""}`}>
+      <div className="road-intel-icon" aria-hidden="true">{icon}</div>
+      <div className="road-intel-copy">
+        <span>
+          <b>{label}</b>
+        </span>
+        <small>{detail}</small>
+      </div>
+      <div className="road-intel-value">
+        <i aria-hidden="true" />
+        <strong>{value}</strong>
+      </div>
+    </div>
+  );
+}
+
+function ServiceWindowMetric({
+  detail,
+  eutzTime,
+  icon,
+  label,
+  tone,
+  value,
+}: {
+  detail: string;
+  eutzTime: string;
+  icon: ReactNode;
+  label: string;
+  tone?: string;
+  value: string;
+}) {
+  return (
+    <div className={`road-intel-card road-window-card ${tone ?? ""}`}>
+      <div className="road-intel-icon" aria-hidden="true">{icon}</div>
+      <div className="road-intel-copy">
+        <span>
+          <b>{label}</b>
+        </span>
+        <small>{detail}</small>
+      </div>
+      <div className="road-intel-value">
+        <i aria-hidden="true" />
+        <strong>{value}</strong>
+      </div>
+      <div className="road-eutz-time" aria-label={`EUTZ time ${eutzTime} Paris`}>
+        <span>EUTZ Time</span>
+        <strong>{eutzTime}</strong>
+        <small>Paris</small>
+      </div>
     </div>
   );
 }
@@ -125,40 +174,98 @@ function RoadIntelMetric({
 function RouteRiskReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSummary }) {
   const affected = risk.affectedSystems.slice(0, 5);
   const hiddenCount = Math.max(risk.affectedSystems.length - affected.length, 0);
+  const showFlaggedSystems = isStaticRestrictedRisk(risk) && affected.length > 0;
 
   return (
-    <div className={`road-intel-card road-risk-report road-risk-${risk.level}`}>
-      <span>
-        {icon}
-        <b>Route Risk</b>
-      </span>
+    <div className={`road-intel-card road-route-state road-risk-report road-risk-${risk.level}`}>
+      <div className="road-state-emblem" aria-hidden="true">{icon}</div>
+      <div className="road-state-copy">
+        <span>Route Risk</span>
+        <p>{routeRiskReason(risk)}</p>
+      </div>
       <strong>{risk.label}</strong>
-      <p>{risk.reason ?? "Risk telemetry is being evaluated."}</p>
       <div className="road-risk-meta" aria-label="Route risk details">
-        {affected.length > 0 ? (
+        {showFlaggedSystems ? (
           <span>
             Systems
             <b>{affected.map((system) => system.name).join(", ")}{hiddenCount > 0 ? ` +${hiddenCount}` : ""}</b>
           </span>
-        ) : (
+        ) : null}
+        {risk.lowSecShipKillsLastHour !== null ? (
           <span>
-            Systems
-            <b>No flagged system</b>
-          </span>
-        )}
-        <span>
-          Signal
-          <b>{risk.confidence}</b>
-        </span>
-        {risk.trend && risk.trend !== "unavailable" ? (
-          <span>
-            Baseline
-            <b>{risk.trend}</b>
+            Ship destroyed
+            <b>{risk.lowSecShipKillsLastHour.toLocaleString("en-US")} last hour</b>
           </span>
         ) : null}
       </div>
     </div>
   );
+}
+
+function isStaticRestrictedRisk(risk: RouteRiskSummary) {
+  return risk.level === "restricted" && (risk.reason ?? "").toLowerCase().includes("static");
+}
+
+function routeRiskReason(risk: RouteRiskSummary) {
+  if (risk.level === "restricted") {
+    return "Restricted Solane system.";
+  }
+  if (risk.level === "nominal") {
+    return "No elevated risk detected.";
+  }
+  if (risk.level === "unavailable") {
+    return "Risk telemetry unavailable.";
+  }
+  return risk.reason ?? "Risk telemetry active.";
+}
+
+function GoldenStandardReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSummary }) {
+  return (
+    <div className="road-intel-card road-route-state road-standard-report" aria-label="Golden Standard route">
+      <div className="road-state-emblem" aria-hidden="true">{icon}</div>
+      <div className="road-state-copy">
+        <span>Golden Standard</span>
+        <p>Official Solane route.</p>
+      </div>
+      <strong>Verified</strong>
+      <div className="road-risk-meta road-standard-meta" aria-label="Golden Standard details">
+        <span>
+          Risk
+          <b>{risk.label}</b>
+        </span>
+        <span>
+          Signal
+          <b>{risk.confidence}</b>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function useParisClock() {
+  const [time, setTime] = useState(() => formatParisTime());
+
+  useEffect(() => {
+    const update = () => setTime(formatParisTime());
+    update();
+    const interval = window.setInterval(update, 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return time;
+}
+
+function formatParisTime(now = new Date()) {
+  try {
+    return new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      minute: "2-digit",
+      timeZone: "Europe/Paris",
+    }).format(now);
+  } catch {
+    return "--:--";
+  }
 }
 
 function RouteCell({ index, system, total }: { index: number; system: RouteSystem; total: number }) {
@@ -220,20 +327,11 @@ function trafficLabel(shipJumpsLastHour: number | null | undefined) {
 
 function trafficDetail(traffic: RouteTrafficSummary) {
   if (traffic.totalShipJumpsLastHour === null) {
-    return "Traffic unavailable";
+    return "Unavailable";
   }
 
   const partial = traffic.coverage > 0 && traffic.coverage < 1 ? " - partial" : "";
-  return `${traffic.totalShipJumpsLastHour.toLocaleString("en-US")} jumps last hour${partial}`;
-}
-
-function acceptanceDetail(acceptance: ContractAcceptanceSummary) {
-  if (acceptance.source === "schedule") {
-    return "Outside EUTZ window";
-  }
-  return acceptance.isFresh && acceptance.source === "corp-contracts"
-    ? "Corp queue synced"
-    : "Corp queue syncing";
+  return `${traffic.totalShipJumpsLastHour.toLocaleString("en-US")} last hour${partial}`;
 }
 
 function routeTrafficFromSystems(systems: RouteSystem[]): RouteTrafficSummary {
@@ -291,6 +389,9 @@ function fallbackRouteRisk(): RouteRiskSummary {
     lastSyncedAt: null,
     level: "unavailable",
     reason: "Risk telemetry unavailable.",
+    routeStandard: "standard",
+    routeStandardLabel: "Standard Route",
+    lowSecShipKillsLastHour: null,
     trend: "unavailable",
   };
 }

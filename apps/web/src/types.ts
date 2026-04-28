@@ -30,11 +30,21 @@ export type QuoteValidation = {
   allowedSizes: CargoSize[];
   selectedSizeValid: boolean;
   blockedReason: string | null;
+  blockedCode: BlockedCode | null;
   maxCollateral: number;
   risk?: RouteRiskSummary | null;
 };
 
-export type PricingMode = "fixed" | "per_jump" | "blocked";
+export type BlockedCode =
+  | "missing_collateral"
+  | "minimum_collateral"
+  | "collateral_limit"
+  | "size_unavailable"
+  | "risk_restricted"
+  | "route_unavailable"
+  | "pricing_unavailable";
+
+export type PricingMode = "fixed" | "per_jump" | "hybrid" | "blocked";
 
 export type QuotePricing = QuoteValidation & {
   reward: number;
@@ -81,16 +91,20 @@ export type RouteRiskSummary = {
   lastSyncedAt: string | null;
   confidence: RouteRiskConfidence;
   trend?: RouteRiskTrend | null;
+  routeStandard: "golden" | "standard";
+  routeStandardLabel: "Golden Standard" | "Standard Route";
+  lowSecShipKillsLastHour: number | null;
 };
 
-export type ContractAcceptanceLevel = "express" | "fast" | "normal" | "slower" | "extended" | "standby" | "syncing";
+export type ServiceWindowLevel = "low_activity" | "medium_activity" | "high_activity";
 
-export type ContractAcceptanceSummary = {
-  level: ContractAcceptanceLevel;
-  label: "Express" | "Fast" | "Normal" | "Slower" | "Extended" | "Standby" | "Syncing";
+export type ServiceWindowSummary = {
+  level: ServiceWindowLevel;
+  label: "Low Activity" | "Medium Activity" | "High Activity";
+  detail: "Night EUTZ" | "Day EUTZ" | "Prime EUTZ";
   lastSyncedAt: string | null;
   isFresh: boolean;
-  source: "corp-contracts" | "schedule" | "syncing";
+  source: "schedule";
 };
 
 export type RouteResult = {
@@ -106,6 +120,7 @@ export type QuoteResult = {
   route: RouteResult;
   estimate: number;
   blockedReason?: string;
+  blockedCode?: BlockedCode;
   currency: "ISK";
   pricingLabel: string;
   pricingMode: PricingMode;

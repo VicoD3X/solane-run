@@ -17,7 +17,7 @@
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/license-proprietary-a855f7" />
   <img alt="Frontend" src="https://img.shields.io/badge/frontend-source%20available-a855f7" />
-  <img alt="API" src="https://img.shields.io/badge/backend-private-19a8ff" />
+  <img alt="API" src="https://img.shields.io/badge/API-Solane%20Engine-19a8ff" />
 </p>
 
 ![Solane Run desktop preview](docs/github/solane-run-desktop.png)
@@ -26,24 +26,24 @@
 
 Solane Run is the frontend foundation for a premium freight service around EVE Online logistics. The beta surface focuses on a fast, readable freight calculator: select a pick up system, select a destination, choose a cargo size, and get an automatically refreshed route-backed contract review.
 
-The public repository intentionally contains only the web app and is distributed under a proprietary All Rights Reserved license. EVE ESI integration, future pricing rules, operational logic, contract automation, account flows, and internal Solane Run services live behind a private API.
+The public repository intentionally contains only the web app and is distributed under a proprietary All Rights Reserved license. The web app consumes a Solane Run API for public EVE data, route intelligence, and server-owned pricing.
 
 ## Current Surface
 
 | Area | Status | Notes |
 | --- | --- | --- |
 | Freight calculator | Active | Pick Up, Destination, cargo size, free collateral up to 5B ISK, contract review |
-| System catalog | API-backed | Provided by the private Solane Run API |
+| System catalog | API-backed | Provided by the Solane Run API |
 | Road overview | API-backed | Gate-to-gate route, system security bar, and last-hour traffic tooltips |
-| Tranquility status | API-backed | Player count and EVE time exposed through the private API |
-| Backend logic | Private | EVE ESI adapters, pricing rules, caches, and internal operations are not published here |
+| Tranquility status | API-backed | Player count and EVE time exposed through the Solane Run API |
+| Backend logic | Server-owned | Public ESI adapters, pricing rules, caches, and internal operations are not published here |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Web["React + Vite + TypeScript"] --> API["Solane Run private API"]
-  API --> ESI["EVE ESI adapters"]
+  Web["React + Vite + TypeScript"] --> API["Solane Run API"]
+  API --> ESI["Public EVE ESI adapters"]
   API --> Rules["Internal pricing and service rules"]
   API --> Cache["Private caches and data stores"]
   Web --> UI["Fixed violet command UI"]
@@ -55,7 +55,7 @@ flowchart LR
 apps/
   web/       React, Vite, TypeScript, Tailwind, local fonts
 docs/
-  api/       Frontend-facing private API contract
+  api/       Frontend-facing API contract
   design/    Accepted visual concept
   github/    Repository presentation assets
 infra/       Frontend Docker Compose and nginx scaffolding
@@ -67,13 +67,13 @@ scripts/     Local verification scripts
 
 This repository does not ship backend source code. The web app talks to a Solane Run API through `VITE_API_BASE_URL`.
 
-The private API is responsible for:
+The Solane Run API is responsible for:
 
-- EVE ESI adapters and compatibility handling
+- public EVE ESI adapters and compatibility handling
 - SDE/system catalog filtering
 - route policy, route traffic, and cache strategy
 - Solane Run pricing formulas and service rules
-- future account, order, and internal operational workflows
+- future account and order workflows, if they return later
 
 The frontend-facing contract is documented in [`docs/api/frontend-contract.md`](docs/api/frontend-contract.md). Public contributors should treat that document as the integration surface and should not add backend business logic to this repository.
 
@@ -105,7 +105,7 @@ Install frontend dependencies:
 npm install
 ```
 
-Configure the private API base URL if needed:
+Configure the API base URL if needed:
 
 ```powershell
 $env:VITE_API_BASE_URL="http://localhost:8001"
@@ -122,6 +122,24 @@ Open the app at:
 ```text
 http://127.0.0.1:5173/
 ```
+
+## Docker Preview
+
+The frontend container can proxy `/api/*` to a Solane Run API container when both services join the same Docker network:
+
+```powershell
+docker network create solane-run
+docker compose -f infra/docker-compose.yml up -d --build
+```
+
+If the default port is already in use, override it:
+
+```powershell
+$env:WEB_PORT="8080"
+docker compose -f infra/docker-compose.yml up -d --build
+```
+
+Hetzner deployment notes live in [`docs/deploy/hetzner-vps.md`](docs/deploy/hetzner-vps.md).
 
 ## Verification
 

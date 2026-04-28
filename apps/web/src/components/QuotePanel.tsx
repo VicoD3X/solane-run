@@ -15,10 +15,14 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [routeMetaView, setRouteMetaView] = useState<{ closing: boolean; value: string } | null>(null);
   const speedLabel = labelForSpeed(input.speed);
-  const isBlocked = Boolean(result.blockedReason);
-  const rewardHidden = isMinimumCollateralBlock(result.blockedReason);
+  const isTransientPricingSync = result.source === "local" && result.blockedCode === "pricing_unavailable";
+  const displayedBlockedReason = isTransientPricingSync ? undefined : result.blockedReason;
+  const isSoftBlock = result.blockedCode === "minimum_collateral";
+  const isBlocked = Boolean(displayedBlockedReason);
+  const isStrongBlock = isBlocked && !isSoftBlock;
+  const rewardHidden = isTransientPricingSync || result.blockedCode === "missing_collateral" || result.blockedCode === "minimum_collateral" || input.collateral < 10_000_000;
   const reward = isBlocked ? "Blocked" : formatFullIsk(result.estimate);
-  const collateral = formatFullIsk(input.collateral);
+  const collateral = input.collateral > 0 ? formatFullIsk(input.collateral) : "Not set";
   const deadline = input.speed === "rush" ? "1 day" : "3 days";
   const contractTo = "Solane Run";
   const routeValue = `${result.route.jumps} jumps`;
@@ -55,17 +59,17 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   };
 
   return (
-    <aside className={`quote-panel ${isBlocked ? "quote-panel-blocked" : ""}`} id="pricing">
+    <aside className={`quote-panel ${isStrongBlock ? "quote-panel-blocked" : ""}`} id="pricing">
       <div className="quote-head">
         <strong>Contract Review</strong>
       </div>
 
-      {result.blockedReason ? (
-        <div className="quote-lock-message" role="status">
+      {displayedBlockedReason ? (
+        <div className={`quote-lock-message ${isSoftBlock ? "quote-lock-message-soft" : ""}`} role="status">
           <AlertTriangle size={17} />
           <span>
-            <b>{blockedReasonTitle(result.blockedReason)}</b>
-            <small>{result.blockedReason}</small>
+            <b>{blockedReasonTitle(result.blockedCode)}</b>
+            <small>{displayedBlockedReason}</small>
           </span>
         </div>
       ) : null}
@@ -99,7 +103,7 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
           icon={<CircleDollarSign size={17} />}
           label="Collateral"
           copied={copiedKey === "collateral"}
-          onCopy={() => copyValue("collateral", collateral)}
+          onCopy={input.collateral > 0 ? () => copyValue("collateral", collateral) : undefined}
           value={collateral}
         />
         {!rewardHidden ? (
@@ -127,21 +131,23 @@ export function QuotePanel({ input, result }: QuotePanelProps) {
   );
 }
 
-function blockedReasonTitle(reason: string) {
-  if (isMinimumCollateralBlock(reason)) {
+function blockedReasonTitle(code: QuoteResult["blockedCode"]) {
+  if (code === "minimum_collateral") {
     return "Risk desk minimum";
   }
-  if (reason.toLowerCase().includes("risk controls")) {
-    return "Route restricted";
-  }
-  if (reason.toLowerCase().includes("collateral")) {
+  if (code === "collateral_limit") {
     return "Collateral limit";
   }
+  if (code === "risk_restricted") {
+    return "Route restricted";
+  }
+  if (code === "size_unavailable") {
+    return "Size unavailable";
+  }
+  if (code === "route_unavailable") {
+    return "Route unavailable";
+  }
   return "Quote blocked";
-}
-
-function isMinimumCollateralBlock(reason: string | null | undefined) {
-  return reason?.toLowerCase().includes("minimum collateral") ?? false;
 }
 
 function PacketRow({

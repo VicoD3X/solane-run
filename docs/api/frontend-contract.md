@@ -1,8 +1,8 @@
 # Solane Run Frontend API Contract
 
-This public repository contains the Solane Run web frontend only. The backend, EVE ESI adapters, pricing rules, internal caches, and operational workflows are private.
+This public repository contains the Solane Run web frontend only. The backend owns public EVE ESI adapters, pricing rules, internal caches, and operational workflows.
 
-The frontend talks to the private API through:
+The frontend talks to the Solane Run API through:
 
 ```text
 VITE_API_BASE_URL=https://api.example.local
@@ -13,7 +13,7 @@ All examples below are frontend-facing contracts, not backend implementation gui
 ## Principles
 
 - Keep this contract stable for the public source-available frontend.
-- Do not expose internal pricing formulas, route policy internals, ESI credentials, private ESI scopes, or operational rules.
+- Do not expose internal pricing formulas, route policy internals, credentials, or operational rules.
 - Return enough data for the UI to render a useful calculator and route reconnaissance surface.
 - Prefer additive changes. Removing fields should be treated as a breaking change.
 - All UI strings remain English.
@@ -57,7 +57,7 @@ Expected shape:
 GET /api/eve/systems?q=Jita&limit=12
 ```
 
-The private API owns catalog construction and filtering. The current frontend expects selectable systems to include HighSec, LowSec, Pochven, Thera, and Zarzakh according to Solane Run service rules.
+The Solane Run API owns catalog construction and filtering. The current frontend expects selectable systems to include HighSec, LowSec, Pochven, Thera, and Zarzakh according to Solane Run service rules.
 
 Expected item shape:
 
@@ -81,7 +81,7 @@ Expected item shape:
 GET /api/eve/route?originId=30000142&destinationId=30002187
 ```
 
-The private API owns route policy, ESI calls, caching, fallback behavior, and future internal route intelligence.
+The Solane Run API owns route policy, public ESI calls, caching, fallback behavior, and internal route intelligence.
 
 Expected shape:
 
@@ -117,7 +117,10 @@ Expected shape:
     "affectedSystems": [],
     "lastSyncedAt": "2026-04-27T07:45:00Z",
     "confidence": "calibrating",
-    "trend": "stable"
+    "trend": "stable",
+    "routeStandard": "golden",
+    "routeStandardLabel": "Golden Standard",
+    "lowSecShipKillsLastHour": null
   },
   "jumps": 2
 }
@@ -125,53 +128,46 @@ Expected shape:
 
 `shipJumpsLastHour` may be `null` when traffic data is unavailable. `routeTraffic` may report `Unavailable` and should not block the route display.
 
-`routeRisk` is a display-safe Solane Run risk signal. `Restricted` may block the quote, while smart PVP risk levels can be shown without exposing internal scoring rules. `trend` is optional and may be `stable`, `recurrent`, `volatile`, or `unavailable`.
+`routeRisk` is a display-safe Solane Run risk signal. `Restricted` may block the quote, while smart PVP risk levels can be shown without exposing internal scoring rules. `trend` is optional and may be `stable`, `recurrent`, `volatile`, or `unavailable`. `routeStandard` is a route comfort label only and never bypasses blocking risk controls. `lowSecShipKillsLastHour` is only populated when LowSec systems on the route are covered by Route Risk telemetry.
 
 ## Contract Acceptance
 
 ```http
-GET /api/solane/contract-acceptance
+GET /api/solane/service-window
 ```
 
-The private API owns the EVE SSO token, corporation contract sync, internal queue interpretation, and freshness policy. The public frontend only receives a compact status for the Road Overview.
+The active API uses a schedule-only EUTZ activity signal for the Contract Acceptance card. It does not require EVE SSO, corporation-contract scopes, operator login, or refresh tokens.
 
 Expected shape:
 
 ```json
 {
-  "level": "fast",
-  "label": "Fast",
+  "level": "high_activity",
+  "label": "High Activity",
+  "detail": "Prime EUTZ",
   "lastSyncedAt": "2026-04-27T10:45:00Z",
   "isFresh": true,
-  "source": "corp-contracts"
-}
-```
-
-When private ESI is not configured or unavailable, the API should return:
-
-```json
-{
-  "level": "syncing",
-  "label": "Syncing",
-  "lastSyncedAt": null,
-  "isFresh": false,
-  "source": "syncing"
-}
-```
-
-Outside the weekday EUTZ acceptance window, the API may return a static schedule state:
-
-```json
-{
-  "level": "standby",
-  "label": "Standby",
-  "lastSyncedAt": "2026-04-28T02:30:00Z",
-  "isFresh": false,
   "source": "schedule"
 }
 ```
 
-The frontend must not infer or publish the underlying queue formula.
+The supported levels are:
+
+- `low_activity`: `23:00-08:00 Europe/Paris`, detail `Night EUTZ`.
+- `medium_activity`: `08:00-17:00 Europe/Paris`, detail `Day EUTZ`.
+- `high_activity`: `17:00-23:00 Europe/Paris`, detail `Prime EUTZ`.
+
+The frontend should display this as service availability context only. It must not infer account, order, or corporation workload data.
+
+## Archived Private ESI
+
+The previous `contract-acceptance` prototype based on EVE SSO and corporation contracts was removed from the active runtime. The archival notes live in the API repository and can be revisited after production deployment is stable.
+
+Removed endpoint:
+
+```http
+GET /api/solane/contract-acceptance
+```
 
 ## Quote Validation
 
@@ -179,7 +175,7 @@ The frontend must not infer or publish the underlying queue formula.
 POST /api/solane/quote/validate
 ```
 
-The private API owns Solane Engine guardrails for route eligibility, cargo size availability, collateral limits, and future service rules. The public frontend may use the response to disable impossible UI options, but must not treat its local fallback as authoritative.
+The Solane Run API owns Solane Engine guardrails for route eligibility, cargo size availability, collateral limits, and future service rules. The public frontend may use the response to disable impossible UI options, but must not treat its local fallback as authoritative.
 
 Expected request shape:
 
@@ -200,6 +196,7 @@ Expected response shape:
   "allowedSizes": ["small", "medium", "freighter"],
   "selectedSizeValid": true,
   "blockedReason": null,
+  "blockedCode": null,
   "maxCollateral": 5000000000,
   "risk": {
     "level": "nominal",
@@ -209,12 +206,15 @@ Expected response shape:
     "affectedSystems": [],
     "lastSyncedAt": null,
     "confidence": "live",
-    "trend": "stable"
+    "trend": "stable",
+    "routeStandard": "standard",
+    "routeStandardLabel": "Standard Route",
+    "lowSecShipKillsLastHour": null
   }
 }
 ```
 
-`allowedSizes` uses the public UI keys `small`, `medium`, and `freighter`. `blockedReason` is a display-safe summary only; detailed service rules and pricing logic remain private.
+`allowedSizes` uses the public UI keys `small`, `medium`, and `freighter`. `blockedReason` and `blockedCode` are display-safe summaries only; detailed service rules and pricing logic remain private.
 
 `maxCollateral` is dynamic and may change after endpoint or size changes. The frontend should render it directly and must not infer the underlying Solane Engine rules.
 
@@ -224,7 +224,7 @@ Expected response shape:
 POST /api/solane/quote/calculate
 ```
 
-The private API owns reward calculation, route-dependent pricing, speed availability, and internal service rules. The frontend must display the returned reward and blocked state directly.
+The Solane Run API owns reward calculation, route-dependent pricing, speed availability, and internal service rules. The frontend must display the returned reward and blocked state directly.
 
 Expected request shape:
 
@@ -246,6 +246,7 @@ Expected response shape:
   "allowedSizes": ["small", "medium", "freighter"],
   "selectedSizeValid": true,
   "blockedReason": null,
+  "blockedCode": null,
   "maxCollateral": 5000000000,
   "reward": 13050000,
   "currency": "ISK",
@@ -260,25 +261,27 @@ Expected response shape:
     "affectedSystems": [{ "id": 30003504, "name": "Niarja" }],
     "lastSyncedAt": "2026-04-27T07:45:00Z",
     "confidence": "calibrating",
-    "trend": "recurrent"
+    "trend": "recurrent",
+    "routeStandard": "standard",
+    "routeStandardLabel": "Standard Route",
+    "lowSecShipKillsLastHour": 18
   }
 }
 ```
 
-When pricing is unavailable or the selected speed is not supported, `valid` is `false`, `reward` is `0`, and `blockedReason` contains a display-safe message. The frontend must not duplicate or publish pricing formulas.
+`pricingMode` may be `fixed`, `per_jump`, `hybrid`, or `blocked`. When pricing is unavailable, `valid` is `false`, `reward` is `0`, and `blockedReason` plus `blockedCode` contain display-safe messages. The frontend must not duplicate or publish pricing formulas.
 
-When collateral is below the private API minimum, `valid` is `false`, `reward` is `0`, and the frontend should display the `blockedReason` without rendering a copyable reward.
+When collateral is below the API minimum, `valid` is `false`, `reward` is `0`, and the frontend should display the `blockedReason` without rendering a copyable reward.
 
 When `risk.isBlocking` is `true`, the frontend must display the blocked state directly and must not try to bypass it locally.
 
-## Future Private Endpoints
+## Deferred Private Surfaces
 
-The following surfaces are expected to move behind private Solane Run endpoints over time:
+The following surfaces are intentionally not part of the active calculator API. They may return later after production deployment is stable:
 
-- quote pricing and reward calculation
-- service availability and operational status
-- route risk intelligence
 - internal contract templates
 - future account or order workflows
+- optional EVE SSO operator tooling
+- corporation contract workload intelligence
 
 When those endpoints are introduced, document only the frontend request/response contract here. Do not publish backend formulas or implementation details.

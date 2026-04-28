@@ -27,7 +27,7 @@ Run locally:
 npm run dev:web
 ```
 
-Set `VITE_API_BASE_URL` to a compatible private API before running route-backed workflows.
+Set `VITE_API_BASE_URL` to a compatible Solane Run API before running route-backed workflows.
 
 Before opening a pull request, run the relevant checks:
 

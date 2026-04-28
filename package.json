@@ -12,6 +12,7 @@
     "lint:web": "npm --workspace apps/web run lint",
     "preview:web": "npm --workspace apps/web run preview",
     "security:web": "node scripts/verify-security.mjs",
-    "w3c:web": "npm --workspace apps/web run w3c"
+    "w3c:web": "npm --workspace apps/web run w3c",
+    "export:zip": "powershell -ExecutionPolicy Bypass -File scripts/export-release-zip.ps1"
   }
 }

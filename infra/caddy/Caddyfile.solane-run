@@ -1,0 +1,12 @@
+solane-run.app, www.solane-run.app {
+	encode zstd gzip
+
+	header {
+		Referrer-Policy "no-referrer"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+	}
+
+	reverse_proxy solane-web:80
+}

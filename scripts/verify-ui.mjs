@@ -27,14 +27,10 @@ try {
   await expect(desktop.getByText("Active")).toBeVisible();
   await expect(desktop.getByText("Discord Server")).toBeVisible();
   await expect(desktop.getByText("Route Intel")).toBeVisible();
-  await expect(desktop.getByText("My Run")).toBeVisible();
   await desktop.getByRole("button", { name: "Discord Server coming soon" }).click();
   await expect(desktop.getByText("Coming soon")).toBeVisible();
   await desktop.waitForTimeout(1400);
   await desktop.getByRole("button", { name: "Route Intel coming soon" }).click();
-  await expect(desktop.getByText("Coming soon")).toBeVisible();
-  await desktop.waitForTimeout(1400);
-  await desktop.getByRole("button", { name: "My Run coming soon" }).click();
   await expect(desktop.getByText("Coming soon")).toBeVisible();
   await expect(desktop.getByText("Run Readiness")).toHaveCount(0);
   await expect(desktop.locator(".site-footer").getByText("Premium freight desk for New Eden")).toBeVisible();
@@ -46,13 +42,13 @@ try {
   await expect(desktop.locator(".contract-packet").getByText("Normal")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("Contract to")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("Collateral")).toBeVisible();
-  await expect(desktop.locator(".contract-packet").getByText("Rewards")).toBeVisible();
+  await expect(desktop.locator(".contract-packet").getByText("Rewards")).toHaveCount(0);
   await expect(desktop.locator(".contract-packet").getByText("Expiration")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("Days to complete")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("Solane Run")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("3 days")).toHaveCount(2);
-  await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toBeVisible();
-  await expect(desktop.getByRole("button", { name: "Copy Collateral" })).toBeVisible();
+  await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toHaveCount(0);
+  await expect(desktop.getByRole("button", { name: "Copy Collateral" })).toHaveCount(0);
   await expect(desktop.getByRole("button", { name: "Copy Contract to" })).toBeVisible();
   await expect(desktop.getByRole("button", { name: "Copy Expiration" })).toHaveCount(0);
   await expect(desktop.getByRole("button", { name: "Copy Days to complete" })).toHaveCount(0);
@@ -102,7 +98,7 @@ try {
   await expect(desktop.getByRole("button", { name: "800,000 m3" })).toHaveCount(0);
   await expect(desktop.getByText("Set Pick Up and Destination to unlock cargo sizes.")).toBeVisible();
   await expect(desktop.locator(".contract-packet").getByText("60,000 m3")).toBeVisible();
-  await expect(desktop.locator(".contract-packet").getByText("0 ISK")).toHaveCount(2);
+  await expect(desktop.locator(".contract-packet").getByText("Not set")).toBeVisible();
   await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita123");
   await expect(desktop.getByRole("combobox", { name: "Pick Up" })).toHaveValue("Jita");
   await desktop.getByRole("combobox", { name: "Pick Up" }).fill("");
@@ -140,14 +136,17 @@ try {
     await expect(desktop.getByText("Road Overview")).toBeVisible();
     await expect(desktop.locator(".road-overview")).toBeVisible();
     await expect(desktop.getByText("Total jumps")).toBeVisible();
-    await expect(desktop.getByText("Route Traffic")).toBeVisible();
-    await expect(desktop.getByText("Contract Acceptance")).toBeVisible();
-    await expect(desktop.getByText("Route Risk")).toBeVisible();
-    await expect(desktop.getByText(/Corp queue (synced|syncing)/i)).toBeVisible();
-    await expect(desktop.locator(".road-intel-card").getByText(/Express|Fast|Normal|Slower|Extended|Standby|Syncing/)).toBeVisible();
-    await expect(desktop.locator(".road-intel-card").getByText(/Nominal|Watched|Hot|Flashpoint|Restricted|Unavailable/)).toBeVisible();
-    await expect(desktop.getByText("Security bands")).toBeVisible();
-    await expect(desktop.locator(".road-intel-card small").filter({ hasText: /jumps last hour/i })).toBeVisible();
+    await expect(desktop.getByText("Traffic", { exact: true })).toBeVisible();
+    await expect(desktop.getByText("Contract Acceptance", { exact: true })).toBeVisible();
+    await expect(desktop.getByText("EUTZ Time")).toBeVisible();
+    await expect(desktop.getByText("Paris")).toBeVisible();
+    await expect(desktop.getByText("Route Risk")).toHaveCount(0);
+    await expect(desktop.getByText("Golden Standard").first()).toBeVisible();
+    await expect(desktop.locator(".road-window-card small").filter({ hasText: /Night EUTZ|Day EUTZ|Prime EUTZ/i })).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Low Activity|Medium Activity|High Activity/)).toBeVisible();
+    await expect(desktop.locator(".road-intel-card").getByText(/Nominal|Watched|Hot|Flashpoint|Restricted|Unavailable|Verified/).first()).toBeVisible();
+    await expect(desktop.getByText("Security", { exact: true })).toBeVisible();
+    await expect(desktop.locator(".road-intel-card small").filter({ hasText: /last hour/i })).toBeVisible();
     await expect(desktop.locator(".road-system-cell").first()).toBeVisible({ timeout: 15000 });
     const roadCellCount = await desktop.locator(".road-system-cell").count();
     if (roadCellCount < 2) {
@@ -166,8 +165,8 @@ try {
       return !text.includes("Rewards0 ISK") && !text.includes("Blocked");
     }, null, { timeout: 15000 });
     await desktop.locator(".speed-toggle").getByRole("button", { name: /Normal/i }).click();
-    await expect(desktop.locator(".quote-lock-message")).toContainText("Rush pricing is coming soon.", { timeout: 15000 });
-    await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toHaveCount(0);
+    await expect(desktop.locator(".quote-lock-message")).toHaveCount(0, { timeout: 15000 });
+    await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toBeVisible();
     await desktop.locator(".speed-toggle").getByRole("button", { name: /Rush/i }).click();
     await expect(desktop.locator(".quote-lock-message")).toHaveCount(0, { timeout: 15000 });
     await desktop.getByRole("button", { name: "800,000 m3" }).click();
@@ -224,6 +223,7 @@ try {
   if (mobileOverflow > 1) {
     throw new Error(`Mobile horizontal overflow detected: ${mobileOverflow}px`);
   }
+  await mobile.waitForTimeout(1200);
   await mobile.screenshot({ path: "dev.logs/mobile.png", fullPage: true });
 } finally {
   await browser.close();

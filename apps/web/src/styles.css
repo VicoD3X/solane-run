@@ -1124,9 +1124,9 @@ main {
 .road-overview {
   position: relative;
   display: flex;
-  min-height: 370px;
+  min-height: 340px;
   flex-direction: column;
-  padding: 18px;
+  padding: 14px;
   background:
     linear-gradient(135deg, rgba(var(--service-accent-rgb), 0.08), transparent 38%),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.018)),
@@ -1182,12 +1182,20 @@ main {
 }
 
 .road-overview-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
   align-items: center;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(133, 188, 225, 0.12);
+  min-height: 74px;
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(var(--ui-purple-rgb), 0.07), transparent 40%, rgba(2, 7, 13, 0.28)),
+    rgba(4, 12, 22, 0.54);
+  padding: 10px 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 12px 34px rgba(0, 0, 0, 0.12);
 }
 
 .road-overview-header span,
@@ -1195,7 +1203,7 @@ main {
 .road-system-tooltip span {
   color: var(--muted);
   font-family: var(--font-accent);
-  font-size: 0.64rem;
+  font-size: 0.54rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -1204,46 +1212,95 @@ main {
   color: var(--ui-purple);
 }
 
+.road-title-block {
+  position: relative;
+  min-width: 0;
+  padding-left: 12px;
+}
+
+.road-title-block::before {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--ui-purple);
+  box-shadow: 0 0 16px rgba(var(--ui-purple-rgb), 0.5);
+  content: "";
+}
+
 .road-overview-header h2 {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #eef7ff;
   font-family: var(--font-main);
-  font-size: clamp(1rem, 1.2vw, 1.22rem);
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: clamp(1.25rem, 1.9vw, 1.82rem);
+  font-weight: 700;
+  line-height: 1;
+  overflow-wrap: anywhere;
+  text-shadow: 0 0 20px rgba(230, 243, 255, 0.08);
 }
 
 .road-jump-metric {
   display: grid;
+  position: relative;
   grid-template-columns: auto auto;
-  gap: 1px 9px;
+  gap: 2px 9px;
   align-items: center;
-  min-width: 112px;
-  border-left: 2px solid rgba(var(--service-accent-rgb), 0.72);
+  min-width: 104px;
+  border: 1px solid rgba(var(--ui-purple-rgb), 0.34);
+  border-radius: 7px;
   background:
-    linear-gradient(90deg, rgba(var(--service-accent-rgb), 0.13), transparent 84%),
-    rgba(2, 6, 13, 0.24);
-  padding: 6px 4px 6px 12px;
+    linear-gradient(135deg, rgba(var(--ui-purple-rgb), 0.18), transparent 58%),
+    rgba(2, 7, 13, 0.48);
+  padding: 8px 11px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 0 20px rgba(var(--ui-purple-rgb), 0.08);
+  margin-right: 12px;
+}
+
+.road-jump-metric::after {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(var(--ui-purple-rgb), 0.78);
+  content: "";
+  box-shadow: 0 0 12px rgba(var(--ui-purple-rgb), 0.34);
 }
 
 .road-jump-metric svg {
-  grid-row: 1 / 3;
-  color: var(--service-accent);
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  width: 17px;
+  height: 17px;
+  color: var(--ui-purple);
+  filter: drop-shadow(0 0 12px rgba(var(--ui-purple-rgb), 0.34));
 }
 
 .road-jump-metric span {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: start;
   color: var(--muted);
   font-family: var(--font-accent);
-  font-size: 0.56rem;
+  font-size: 0.48rem;
   font-weight: 600;
   line-height: 1;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
 .road-jump-metric strong {
+  grid-column: 2;
+  grid-row: 2;
   color: #f3f8ff;
-  font-size: 1.42rem;
-  font-weight: 600;
+  font-size: clamp(1.18rem, 1.65vw, 1.48rem);
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -1251,17 +1308,17 @@ main {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
-  margin-top: 12px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 8px 10px;
+  margin-top: 8px;
 }
 
 .road-intel-card {
   --traffic-color: var(--service-accent);
 
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 5px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 8px;
   align-items: center;
   border: 1px solid rgba(133, 188, 225, 0.16);
   border-left-color: color-mix(in srgb, var(--traffic-color) 72%, transparent);
@@ -1269,18 +1326,18 @@ main {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--traffic-color) 9%, transparent), transparent 70%),
     rgba(2, 7, 13, 0.35);
-  padding: 10px 11px;
+  padding: 9px 10px;
 }
 
 .road-intel-card span {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   color: #d3e1ed;
   font-family: var(--font-accent);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-weight: 600;
-  letter-spacing: 0.055em;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
@@ -1289,33 +1346,120 @@ main {
   text-shadow: 0 0 18px color-mix(in srgb, var(--traffic-color) 22%, transparent);
 }
 
-.road-intel-card span svg {
-  margin-right: 3px;
+.road-intel-icon {
+  display: grid;
+  grid-row: 1 / 3;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--traffic-color) 32%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--traffic-color) 18%, transparent), transparent 64%),
+    rgba(0, 5, 11, 0.24);
   color: var(--traffic-color);
+}
+
+.road-intel-icon svg {
+  width: 16px;
+  height: 16px;
+  color: var(--traffic-color);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--traffic-color) 28%, transparent));
+}
+
+.road-intel-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.road-intel-copy small {
+  display: block;
 }
 
 .road-intel-card strong {
   justify-self: end;
   color: #eef7ff;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 600;
   line-height: 1;
 }
 
 .road-intel-card small {
-  grid-column: 1 / -1;
-  color: #8fa6b8;
+  color: #b4c7d7;
   font-family: var(--font-main);
-  font-size: 0.66rem;
-  font-weight: 500;
-  line-height: 1.15;
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1.12;
 }
 
-.road-risk-report {
-  grid-column: 1 / -1;
-  grid-template-columns: minmax(130px, 0.8fr) minmax(0, 1.5fr) auto;
+.road-intel-value {
+  display: inline-flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 6px 12px;
+  gap: 5px;
+  min-width: 0;
+  border-left: 1px solid rgba(133, 188, 225, 0.18);
+  padding-left: 8px;
+}
+
+.road-intel-value i {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--traffic-color);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--traffic-color) 60%, transparent);
+}
+
+.road-window-card {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.road-window-card .road-eutz-time {
+  display: flex;
+  grid-column: 2 / 4;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border-left: 0;
+  border-top: 1px solid rgba(133, 188, 225, 0.13);
+  margin-top: 1px;
+  padding-top: 5px;
+  padding-left: 0;
+}
+
+.road-eutz-time span {
+  color: #c8d8e5;
+  font-family: var(--font-accent);
+  font-size: 0.49rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.road-eutz-time strong {
+  justify-self: start;
+  color: #f4fbff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.road-eutz-time small {
+  color: #b4c7d7;
+  font-size: 0.54rem;
+  font-weight: 600;
+}
+
+.road-risk-report,
+.road-standard-report {
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 0.88fr) minmax(184px, 0.72fr);
+  align-items: center;
+  gap: 7px 12px;
+  min-height: 72px;
   padding: 10px 12px;
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--traffic-color) 11%, transparent), transparent 55%),
@@ -1323,26 +1467,94 @@ main {
     rgba(2, 7, 13, 0.38);
 }
 
-.road-risk-report > span {
-  grid-column: 1;
-  grid-row: 1;
+.road-state-emblem {
+  display: grid;
+  grid-row: 1 / 3;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--traffic-color) 42%, transparent);
+  border-radius: 9px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--traffic-color) 20%, transparent), transparent 67%),
+    rgba(0, 5, 11, 0.34);
+  color: var(--traffic-color);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    0 0 28px color-mix(in srgb, var(--traffic-color) 12%, transparent);
 }
 
-.road-risk-report strong {
+.road-state-emblem svg {
+  width: 19px;
+  height: 19px;
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--traffic-color) 34%, transparent));
+}
+
+.road-state-copy {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  min-width: 0;
+}
+
+.road-state-copy span {
+  display: block;
+  color: color-mix(in srgb, var(--traffic-color) 72%, #f3f8ff);
+  font-family: var(--font-accent);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.065em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.road-state-copy p {
+  margin: 0;
+  margin-top: 5px;
+  max-width: 72ch;
+  overflow: hidden;
+  color: #d1deea;
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.road-risk-report > strong,
+.road-standard-report > strong {
   grid-column: 3;
   grid-row: 1;
-  padding-top: 1px;
+  justify-self: end;
+  color: #eef7ff;
+  font-size: clamp(0.86rem, 1.12vw, 1.08rem);
+  font-weight: 700;
+  line-height: 1;
 }
 
-.road-risk-report p {
-  grid-column: 1 / 3;
-  grid-row: 2;
-  margin: 0;
-  max-width: 72ch;
-  color: #bfd0df;
-  font-size: 0.66rem;
-  font-weight: 500;
-  line-height: 1.25;
+.road-standard-report {
+  --traffic-color: #d4b45f;
+
+  border-color: rgba(212, 180, 95, 0.3);
+  border-left-color: rgba(212, 180, 95, 0.92);
+  background:
+    radial-gradient(circle at 7% 50%, rgba(212, 180, 95, 0.14), transparent 16%),
+    linear-gradient(90deg, rgba(212, 180, 95, 0.14), transparent 54%),
+    linear-gradient(180deg, rgba(255, 246, 209, 0.045), rgba(2, 7, 13, 0.28)),
+    rgba(2, 7, 13, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 197, 0.05),
+    0 0 30px rgba(212, 180, 95, 0.05);
+  overflow: hidden;
+}
+
+.road-standard-report strong {
+  color: #fff2bc;
+  text-shadow: 0 0 20px rgba(212, 180, 95, 0.16);
+}
+
+.road-standard-report p {
+  color: #eee2ba;
 }
 
 .road-risk-meta {
@@ -1351,27 +1563,28 @@ main {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
   margin-top: 0;
+  min-width: 0;
 }
 
 .road-risk-meta span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
   min-width: 0;
-  border: 1px solid rgba(133, 188, 225, 0.11);
+  border: 1px solid color-mix(in srgb, var(--traffic-color) 22%, rgba(133, 188, 225, 0.11));
   border-radius: 6px;
-  background: rgba(0, 5, 11, 0.3);
+  background: rgba(0, 5, 11, 0.34);
   padding: 5px 7px;
-  color: #8095a6;
+  color: #9fb3c4;
   font-size: 0.49rem;
   letter-spacing: 0.055em;
 }
 
 .road-risk-meta span b {
   overflow: hidden;
-  color: #eaf4ff;
+  color: #f2f8ff;
   font-family: var(--font-main);
   font-size: 0.58rem;
   font-weight: 600;
@@ -1379,6 +1592,10 @@ main {
   text-overflow: ellipsis;
   text-transform: none;
   white-space: nowrap;
+}
+
+.road-standard-meta span {
+  min-width: max-content;
 }
 
 .road-traffic-clear {
@@ -1405,29 +1622,16 @@ main {
   --traffic-color: #8393a3;
 }
 
-.road-acceptance-express,
-.road-acceptance-fast {
-  --traffic-color: #6fcf97;
-}
-
-.road-acceptance-normal {
-  --traffic-color: #56b6c6;
-}
-
-.road-acceptance-slower {
-  --traffic-color: #f4b24f;
-}
-
-.road-acceptance-extended {
-  --traffic-color: #f45b26;
-}
-
-.road-acceptance-standby {
+.road-window-low_activity {
   --traffic-color: #8393a3;
 }
 
-.road-acceptance-syncing {
-  --traffic-color: #a855f7;
+.road-window-medium_activity {
+  --traffic-color: #56b6c6;
+}
+
+.road-window-high_activity {
+  --traffic-color: #6fcf97;
 }
 
 .road-risk-nominal {
@@ -1460,17 +1664,17 @@ main {
   align-content: center;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 140px;
-  padding: 18px 2px;
+  gap: 5px;
+  min-height: 112px;
+  padding: 12px 2px;
   overflow: visible;
 }
 
 .road-system-cell {
   position: relative;
   display: block;
-  width: clamp(13px, 1.15vw, 17px);
-  height: clamp(18px, 1.45vw, 23px);
+  width: clamp(12px, 1vw, 15px);
+  height: clamp(16px, 1.25vw, 20px);
   border: 1px solid color-mix(in srgb, var(--cell-color) 72%, white 10%);
   border-radius: 3px;
   background:
@@ -1478,7 +1682,7 @@ main {
     var(--cell-color);
   box-shadow:
     0 0 0 1px rgba(2, 6, 13, 0.55),
-    0 0 14px color-mix(in srgb, var(--cell-color) 42%, transparent);
+    0 0 10px color-mix(in srgb, var(--cell-color) 34%, transparent);
   cursor: help;
   opacity: 0;
   transform: translateY(5px) scale(0.92);
@@ -1488,7 +1692,7 @@ main {
 
 .road-system-cell::after {
   position: absolute;
-  inset: 3px;
+  inset: 2px;
   border-radius: 1px;
   background: rgba(255, 255, 255, 0.14);
   content: "";
@@ -1594,9 +1798,9 @@ main {
 .road-overview-footer {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
   align-items: center;
-  padding-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid rgba(133, 188, 225, 0.12);
 }
 
@@ -1604,7 +1808,7 @@ main {
 .road-overview-footer li {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
 }
 
 .road-overview-footer > span {
@@ -1620,15 +1824,15 @@ main {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px 12px;
+  gap: 6px 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .road-overview-footer i {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
 }
@@ -1638,7 +1842,7 @@ main {
   border-radius: 999px;
   background: rgba(2, 7, 13, 0.34);
   color: #b9c9d8;
-  padding: 5px 8px;
+  padding: 4px 7px;
 }
 
 .route-panel {
@@ -1973,6 +2177,23 @@ main {
   line-height: 1.3;
 }
 
+.quote-lock-message-soft {
+  border-color: rgba(244, 178, 79, 0.34);
+  background:
+    linear-gradient(90deg, rgba(244, 178, 79, 0.15), transparent 78%),
+    rgba(24, 16, 5, 0.62);
+  color: #fff0d2;
+}
+
+.quote-lock-message-soft svg {
+  color: #f4b24f;
+  filter: drop-shadow(0 0 10px rgba(244, 178, 79, 0.26));
+}
+
+.quote-lock-message-soft small {
+  color: #ffd99b;
+}
+
 .estimate-block {
   position: relative;
   padding-bottom: 22px;
@@ -2242,7 +2463,7 @@ main {
   border: 1px solid rgba(var(--ui-purple-rgb), 0.42);
   border-radius: 6px;
   padding: 0 10px;
-  color: var(--ui-purple);
+  color: #c084fc;
   font-size: 0.68rem;
   font-weight: 600;
   line-height: 1;
@@ -2271,7 +2492,7 @@ main {
   min-height: 42px;
   margin: 14px auto 0;
   border-top: 1px solid rgba(139, 165, 188, 0.14);
-  color: var(--dim);
+  color: #c6d6e3;
   font-family: var(--font-accent);
   font-size: 0.66rem;
   font-weight: 500;
@@ -2286,7 +2507,7 @@ main {
 .quote-panel .status-badge,
 .topbar-status .status-badge {
   border-color: rgba(var(--ui-purple-rgb), 0.42);
-  color: var(--ui-purple);
+  color: #c084fc;
   background: rgba(var(--ui-purple-rgb), 0.1);
 }
 
@@ -2735,6 +2956,10 @@ main {
   .road-overview-header,
   .road-overview-footer {
     align-items: flex-start;
+    grid-template-columns: 1fr;
+  }
+
+  .road-overview-footer {
     flex-direction: column;
   }
 
@@ -2743,16 +2968,27 @@ main {
   }
 
   .road-risk-report,
-  .road-risk-report > span,
-  .road-risk-report strong,
-  .road-risk-report p,
+  .road-standard-report,
+  .road-state-emblem,
+  .road-state-copy,
+  .road-route-state > strong,
   .road-risk-meta {
     grid-column: 1;
     grid-row: auto;
   }
 
-  .road-risk-report {
+  .road-risk-report,
+  .road-standard-report {
     grid-template-columns: 1fr;
+  }
+
+  .road-state-emblem {
+    width: 42px;
+    height: 42px;
+  }
+
+  .road-route-state > strong {
+    justify-self: start;
   }
 
   .road-risk-meta {

@@ -1,4 +1,4 @@
-import { Activity, Calculator, PackageSearch, RadioTower } from "lucide-react";
+import { Activity, Calculator, RadioTower } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 
@@ -57,10 +57,6 @@ export function AppShell({
           <span aria-hidden="true" className="nav-separator" />
           <ComingSoonAction label="Route Intel">
             <Activity size={17} />
-          </ComingSoonAction>
-          <span aria-hidden="true" className="nav-separator" />
-          <ComingSoonAction label="My Run">
-            <PackageSearch size={17} />
           </ComingSoonAction>
         </nav>
 

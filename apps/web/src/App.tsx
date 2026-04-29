@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Construction } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { AppShell } from "./components/AppShell";
 import { DataPanel } from "./components/DataPanel";
 import { QuotePanel } from "./components/QuotePanel";
+import { RouteIntelPage } from "./components/RouteIntelPage";
 import { RouteOverview } from "./components/RouteOverview";
 import { SystemAutocomplete } from "./components/SystemAutocomplete";
 import { Input } from "./components/ui/Input";
@@ -455,9 +456,9 @@ function App() {
       routeVisible={layoutHasRoadOverview && !isRouteIntelPage}
       serviceLabel="Solane"
     >
-      {isRouteIntelPage ? (
-        <RouteIntelPage />
-      ) : (
+        {isRouteIntelPage ? (
+          <RouteIntelPage />
+        ) : (
         <>
       <section
         className={`mission-console ${layoutHasRoadOverview ? "mission-console-with-route" : ""}`}
@@ -605,27 +606,4 @@ function parseCollateralShortcutBase(value: string) {
 
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
-function RouteIntelPage() {
-  return (
-    <>
-      <section className="route-intel-page" aria-labelledby="route-intel-title">
-        <div className="route-intel-panel">
-          <Construction aria-hidden="true" size={24} />
-          <span>Temporary 404</span>
-          <h1 id="route-intel-title">Route Intel is not active yet.</h1>
-          <p>
-            This cockpit is being prepared for New Eden haulers.
-          </p>
-          <a href="/">Back to calculator</a>
-        </div>
-      </section>
-      <footer className="site-footer">
-        <strong>Solane Run</strong>
-        <span>Premium & independant freight shipping service</span>
-        <span>{"\u00a9"} 2026 Victor A. All rights reserved.</span>
-      </footer>
-    </>
-  );
 }

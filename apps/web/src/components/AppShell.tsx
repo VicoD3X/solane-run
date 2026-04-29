@@ -51,9 +51,16 @@ export function AppShell({
             <span>Calculator</span>
           </a>
           <span aria-hidden="true" className="nav-separator" />
-          <ComingSoonAction label="Discord Server">
+          <a
+            aria-label="Discord Server"
+            className="nav-action"
+            href="https://discord.gg/WZPTsFuFe4"
+            rel="noreferrer"
+            target="_blank"
+          >
             <DiscordMark />
-          </ComingSoonAction>
+            <span>Discord Server</span>
+          </a>
           <span aria-hidden="true" className="nav-separator" />
           <a className="nav-action" href="/route-intel">
             <Activity size={17} />
@@ -85,29 +92,6 @@ export function AppShell({
 
       <main>{children}</main>
     </div>
-  );
-}
-
-function ComingSoonAction({ children, label }: { children: ReactNode; label: string }) {
-  const [isComingSoon, setIsComingSoon] = useState(false);
-
-  const showComingSoon = () => {
-    setIsComingSoon(true);
-    window.setTimeout(() => setIsComingSoon(false), 1300);
-  };
-
-  return (
-    <button
-      aria-label={`${label} coming soon`}
-      className={`nav-action nav-action-soon ${isComingSoon ? "nav-action-soon-active" : ""}`}
-      onClick={showComingSoon}
-      type="button"
-    >
-      {children}
-      <span className="nav-action-label" data-label={label}>
-        {isComingSoon ? "Coming soon" : label}
-      </span>
-    </button>
   );
 }
 

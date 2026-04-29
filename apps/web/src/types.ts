@@ -46,6 +46,29 @@ export type BlockedCode =
 
 export type PricingMode = "fixed" | "per_jump" | "hybrid" | "blocked";
 
+export type ZkillKillmailSummary = {
+  killmailId: number;
+  totalValue: number;
+  destroyedValue?: number | null;
+  droppedValue?: number | null;
+  locationId?: number | null;
+  npc?: boolean | null;
+  solo?: boolean | null;
+  labels: string[];
+};
+
+export type ZkillIntelSummary = {
+  status: "ready" | "unavailable";
+  killmailCount: number;
+  pvpKillmailCount: number;
+  totalValue: number;
+  highValueKillmailCount: number;
+  latestKillmailAt?: string | null;
+  labels: string[];
+  fetchedAt?: string | null;
+  recentKillmails: ZkillKillmailSummary[];
+};
+
 export type QuotePricing = QuoteValidation & {
   reward: number;
   currency: "ISK";
@@ -63,6 +86,7 @@ export type RouteSystem = {
   shipJumpsLastHour?: number | null;
   shipKillsLastHour?: number | null;
   podKillsLastHour?: number | null;
+  zkillIntel?: ZkillIntelSummary | null;
 };
 
 export type RouteTrafficSummary = {
@@ -109,6 +133,129 @@ export type ServiceWindowSummary = {
   lastSyncedAt: string | null;
   isFresh: boolean;
   source: "schedule";
+};
+
+export type RouteIntelStatus = "ready" | "watchlist_pending" | "calibrating" | "unavailable";
+export type RouteIntelSeverity = "safe" | "watched" | "active_gank" | "severe" | "restricted" | "unavailable" | "pending";
+
+export type RouteIntelSystemRef = {
+  id: number;
+  name: string;
+  securityDisplay?: string | null;
+  serviceType?: string | null;
+  color?: string | null;
+};
+
+export type CrossroadsIntelItem = {
+  system: RouteIntelSystemRef;
+  severity: RouteIntelSeverity;
+  label: string;
+  summary: string;
+  gateCount?: number | null;
+  distanceFromJita?: number | null;
+  shipJumpsLastHour?: number | null;
+  shipKillsLastHour?: number | null;
+  podKillsLastHour?: number | null;
+  zkillIntel?: ZkillIntelSummary | null;
+};
+
+export type CrossroadsIntel = {
+  status: RouteIntelStatus;
+  label: string;
+  summary: string;
+  items: CrossroadsIntelItem[];
+};
+
+export type GoldIntelItem = {
+  routeId: string;
+  origin: RouteIntelSystemRef;
+  destination: RouteIntelSystemRef;
+  label: string;
+  status: RouteIntelStatus;
+};
+
+export type GoldIntel = {
+  status: RouteIntelStatus;
+  label: string;
+  summary: string;
+  items: GoldIntelItem[];
+};
+
+export type CorruptionIntelItem = {
+  system: RouteIntelSystemRef;
+  corruptionState: number;
+  corruptionPercentage: number;
+  suppressionState: number;
+  suppressionPercentage: number;
+  factionId?: number | null;
+  originSystemId?: number | null;
+  severity: RouteIntelSeverity;
+  label: string;
+  zkillIntel?: ZkillIntelSummary | null;
+};
+
+export type CorruptionIntel = {
+  status: RouteIntelStatus;
+  label: string;
+  summary: string;
+  items: CorruptionIntelItem[];
+};
+
+export type GoldIntelDetail = {
+  routeId: string;
+  origin: RouteIntelSystemRef;
+  destination: RouteIntelSystemRef;
+  flag: "shortest" | "secure" | "insecure";
+  jumps: number;
+  systems: RouteSystem[];
+  routeTraffic?: RouteTrafficSummary | null;
+  routeRisk?: RouteRiskSummary | null;
+  zkillIntel?: ZkillIntelSummary | null;
+};
+
+export type CorruptionIntelDetail = CorruptionIntelItem & {
+  shipJumpsLastHour?: number | null;
+  shipKillsLastHour?: number | null;
+  podKillsLastHour?: number | null;
+  gates: GatecheckGate[];
+  summary: string;
+};
+
+export type CrossroadsIntelDetail = {
+  status: RouteIntelStatus;
+  system?: RouteIntelSystemRef | null;
+  summary: string;
+  severity: RouteIntelSeverity;
+  label: string;
+  distanceFromJita?: number | null;
+  shipJumpsLastHour?: number | null;
+  shipKillsLastHour?: number | null;
+  podKillsLastHour?: number | null;
+  zkillIntel?: ZkillIntelSummary | null;
+  gates: GatecheckGate[];
+};
+
+export type GatecheckKillmail = {
+  killmailId: number;
+  totalValue: number;
+  locationId?: number | null;
+  labels: string[];
+};
+
+export type GatecheckGate = {
+  id: number;
+  name: string;
+  destinationSystemId?: number | null;
+  destinationSystemName?: string | null;
+  killsLastHour: number;
+  killmails: GatecheckKillmail[];
+};
+
+export type RouteIntelOverview = {
+  donationCharacter: string;
+  crossroads: CrossroadsIntel;
+  gold: GoldIntel;
+  corruption: CorruptionIntel;
 };
 
 export type RouteResult = {

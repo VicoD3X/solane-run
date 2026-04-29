@@ -27,13 +27,29 @@ try {
   await expect(desktop.getByText("Active")).toBeVisible();
   await expect(desktop.getByText("Discord Server")).toBeVisible();
   await expect(desktop.getByText("Route Intel")).toBeVisible();
-  await desktop.getByRole("button", { name: "Discord Server coming soon" }).click();
-  await expect(desktop.getByText("Coming soon")).toBeVisible();
+  await expect(desktop.getByRole("link", { name: "Discord Server" })).toHaveAttribute(
+    "href",
+    "https://discord.gg/WZPTsFuFe4",
+  );
   await desktop.waitForTimeout(1400);
   await desktop.getByRole("link", { name: "Route Intel" }).click();
-  await expect(desktop.getByText("Temporary 404")).toBeVisible();
-  await expect(desktop.getByText("Route Intel is not active yet.")).toBeVisible();
-  await desktop.getByRole("link", { name: "Back to calculator" }).click();
+  await expect(desktop.getByRole("heading", { name: "Route Intel" })).toBeVisible();
+  await expect(desktop.getByText("HighSec pipes", { exact: true })).toBeVisible();
+  await expect(desktop.getByText("Popular Corridors", { exact: true })).toBeVisible();
+  await expect(desktop.getByText("Insurgency watch", { exact: true })).toBeVisible();
+  await expect(desktop.getByText(/Vito Solane/i)).toBeVisible();
+  if (apiAvailable) {
+    await expect(desktop.getByText(/HighSec gank pipe watchlist|16 systems/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(desktop.getByRole("button", { name: /Uedama/i }).first()).toBeVisible({ timeout: 15000 });
+    await expect(desktop.getByRole("button", { name: /Jita.*Amarr|Amarr.*Jita/i }).first()).toBeVisible({ timeout: 15000 });
+    await desktop.getByRole("button", { name: /Perimeter/i }).first().click();
+    await expect(desktop.locator(".route-intel-block-active")).toBeVisible({ timeout: 15000 });
+    await expect(desktop.locator(".route-intel-block-active").getByText("Ships destroyed")).toBeVisible({ timeout: 15000 });
+    await desktop.getByRole("button", { name: /Back from Crossroads Intel/i }).click();
+    await expect(desktop.locator(".route-intel-block-closing")).toBeVisible({ timeout: 1000 });
+    await expect(desktop.getByRole("button", { name: /Perimeter/i }).first()).toBeVisible({ timeout: 3000 });
+  }
+  await desktop.getByRole("link", { name: "Calculator" }).click();
   await expect(desktop.getByText("Freight parameters")).toBeVisible();
   await expect(desktop.getByText("Run Readiness")).toHaveCount(0);
   await expect(desktop.locator(".site-footer").getByText("Premium & independant freight shipping service")).toBeVisible();

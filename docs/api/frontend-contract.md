@@ -130,6 +130,98 @@ Expected shape:
 
 `routeRisk` is a display-safe Solane Run risk signal. `Restricted` may block the quote, while smart PVP risk levels can be shown without exposing internal scoring rules. `trend` is optional and may be `stable`, `recurrent`, `volatile`, or `unavailable`. `routeStandard` is a route comfort label only and never bypasses blocking risk controls. `lowSecShipKillsLastHour` is only populated when LowSec systems on the route are covered by Route Risk telemetry.
 
+## Route Intel
+
+```http
+GET /api/route-intel/overview
+GET /api/route-intel/crossroads/{systemId}
+GET /api/route-intel/gold/{routeId}
+GET /api/route-intel/corruption/{systemId}
+```
+
+Route Intel is a free, frontend-facing reconnaissance surface. It exposes display-safe summaries only:
+
+- `crossroads`: dangerous HighSec pipe watchlist, ordered by highest ESI ship kills last hour.
+- `gold`: Solane Run Golden Standard route pairs and route-detail telemetry.
+- `corruption`: CCP insurgency corruption level 5 and 4 systems.
+
+The frontend may render route names, public ESI traffic/kills, corruption/suppression state, route risk labels, waypoint lists, and zKillboard display summaries. It must not assume private scoring formulas, ganker watchlist internals, or zKillboard implementation details.
+
+`zkillIntel` is complementary and may be `null` or `status: "unavailable"` without blocking any Route Intel panel:
+
+```json
+{
+  "status": "ready",
+  "killmailCount": 3,
+  "pvpKillmailCount": 2,
+  "totalValue": 1500000000,
+  "highValueKillmailCount": 1,
+  "latestKillmailAt": null,
+  "labels": ["isk:1b+"],
+  "fetchedAt": "2026-04-29T08:00:00Z",
+  "recentKillmails": [
+    {
+      "killmailId": 135076695,
+      "totalValue": 1500000000,
+      "destroyedValue": 900000000,
+      "droppedValue": 600000000,
+      "locationId": 50014064,
+      "npc": false,
+      "solo": false,
+      "labels": ["pvp", "isk:1b+"]
+    }
+  ]
+}
+```
+
+Expected overview shape:
+
+```json
+{
+  "donationCharacter": "Vito Solane",
+  "crossroads": {
+    "status": "ready",
+    "label": "12 systems",
+    "summary": "HighSec gank pipe watchlist.",
+    "items": [
+      {
+        "system": { "id": 30002768, "name": "Uedama" },
+        "severity": "active_gank",
+        "label": "Gank",
+        "summary": "High ship loss activity detected.",
+        "distanceFromJita": 6,
+        "shipJumpsLastHour": 2400,
+        "shipKillsLastHour": 18,
+        "podKillsLastHour": 1,
+        "zkillIntel": null
+      }
+    ]
+  },
+  "gold": {
+    "status": "ready",
+    "label": "Golden routes",
+    "summary": "Manually reviewed Solane corridors.",
+    "items": [
+      {
+        "routeId": "jita--amarr",
+        "origin": { "id": 30000142, "name": "Jita" },
+        "destination": { "id": 30002187, "name": "Amarr" },
+        "label": "Jita - Amarr",
+        "status": "ready"
+      }
+    ]
+  },
+  "corruption": {
+    "status": "ready",
+    "label": "Corruption watch",
+    "summary": "Insurgency systems at corruption level 5 and 4.",
+    "items": []
+  }
+}
+```
+
+Supported Route Intel statuses are `ready`, `watchlist_pending`, `calibrating`, and `unavailable`. Supported severities are `safe`, `watched`, `active_gank`, `severe`, `restricted`, `unavailable`, and `pending`.
+
 ## Contract Acceptance
 
 ```http

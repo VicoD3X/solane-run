@@ -1,4 +1,26 @@
-import type { CargoSize, PricingMode, QuoteInput, QuotePricing, QuoteValidation, RouteResult, ServiceWindowSummary, SolarSystem } from "../types";
+import type {
+  CargoSize,
+  CorruptionIntelDetail,
+  CorruptionIntelItem,
+  CrossroadsIntelDetail,
+  GatecheckGate,
+  GatecheckKillmail,
+  GoldIntelDetail,
+  GoldIntelItem,
+  PricingMode,
+  QuoteInput,
+  QuotePricing,
+  QuoteValidation,
+  RouteIntelOverview,
+  RouteIntelSeverity,
+  RouteIntelStatus,
+  RouteIntelSystemRef,
+  RouteResult,
+  ServiceWindowSummary,
+  SolarSystem,
+  ZkillIntelSummary,
+  ZkillKillmailSummary,
+} from "../types";
 import { sanitizeApiText, sanitizeFiniteNumber, sanitizeHexColor, sanitizePositiveInteger, sanitizeSystemQuery } from "./guards";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001";
@@ -75,6 +97,26 @@ export async function fetchServiceWindow(): Promise<ServiceWindowSummary> {
     level: serviceLevel.level,
     source: "schedule",
   };
+}
+
+export async function fetchRouteIntelOverview(): Promise<RouteIntelOverview> {
+  const overview = await getJson<unknown>("/api/route-intel/overview");
+  return normalizeRouteIntelOverview(overview);
+}
+
+export async function fetchGoldIntelDetail(routeId: string): Promise<GoldIntelDetail> {
+  const detail = await getJson<unknown>(`/api/route-intel/gold/${encodeURIComponent(routeId)}`);
+  return normalizeGoldIntelDetail(detail);
+}
+
+export async function fetchCorruptionIntelDetail(systemId: number): Promise<CorruptionIntelDetail> {
+  const detail = await getJson<unknown>(`/api/route-intel/corruption/${sanitizePositiveInteger(systemId)}`);
+  return normalizeCorruptionIntelDetail(detail);
+}
+
+export async function fetchCrossroadsIntelDetail(systemId: number): Promise<CrossroadsIntelDetail> {
+  const detail = await getJson<unknown>(`/api/route-intel/crossroads/${sanitizePositiveInteger(systemId)}`);
+  return normalizeCrossroadsIntelDetail(detail);
 }
 
 export async function validateQuote(input: QuoteInput): Promise<QuoteValidation> {
@@ -203,6 +245,7 @@ function normalizeRouteSystem(value: unknown): RouteResult["routeSystems"][numbe
     shipJumpsLastHour: system.shipJumpsLastHour === null || system.shipJumpsLastHour === undefined
       ? null
       : sanitizePositiveInteger(system.shipJumpsLastHour),
+    zkillIntel: normalizeZkillIntel(system.zkillIntel),
   };
 }
 
@@ -342,6 +385,234 @@ function normalizeQuotePricing(value: unknown): QuotePricing {
       ? null
       : sanitizePositiveInteger(pricing.routeJumps),
   };
+}
+
+function normalizeRouteIntelOverview(value: unknown): RouteIntelOverview {
+  const overview = isRecord(value) ? value : {};
+  return {
+    corruption: normalizeCorruptionIntel(overview.corruption),
+    crossroads: normalizeCrossroadsIntel(overview.crossroads),
+    donationCharacter: sanitizeApiText(overview.donationCharacter, "Vito Solane"),
+    gold: normalizeGoldIntel(overview.gold),
+  };
+}
+
+function normalizeCrossroadsIntel(value: unknown): RouteIntelOverview["crossroads"] {
+  const section = isRecord(value) ? value : {};
+  return {
+    items: Array.isArray(section.items) ? section.items.map(normalizeCrossroadsIntelItem) : [],
+    label: sanitizeApiText(section.label, "Watchlist pending"),
+    status: normalizeRouteIntelStatus(section.status),
+    summary: sanitizeApiText(section.summary, "Crossroads watchlist pending."),
+  };
+}
+
+function normalizeGoldIntel(value: unknown): RouteIntelOverview["gold"] {
+  const section = isRecord(value) ? value : {};
+  return {
+    items: Array.isArray(section.items) ? section.items.map(normalizeGoldIntelItem) : [],
+    label: sanitizeApiText(section.label, "Golden routes"),
+    status: normalizeRouteIntelStatus(section.status),
+    summary: sanitizeApiText(section.summary, "Manually reviewed Solane corridors."),
+  };
+}
+
+function normalizeCorruptionIntel(value: unknown): RouteIntelOverview["corruption"] {
+  const section = isRecord(value) ? value : {};
+  return {
+    items: Array.isArray(section.items) ? section.items.map(normalizeCorruptionIntelItem) : [],
+    label: sanitizeApiText(section.label, "0 LVL4 / 0 LVL5"),
+    status: normalizeRouteIntelStatus(section.status),
+    summary: sanitizeApiText(section.summary, "Insurgency corruption telemetry."),
+  };
+}
+
+function normalizeCrossroadsIntelItem(value: unknown): RouteIntelOverview["crossroads"]["items"][number] {
+  const item = isRecord(value) ? value : {};
+  return {
+    gateCount: item.gateCount === null || item.gateCount === undefined ? null : sanitizePositiveInteger(item.gateCount),
+    distanceFromJita: item.distanceFromJita === null || item.distanceFromJita === undefined ? null : sanitizePositiveInteger(item.distanceFromJita),
+    label: sanitizeApiText(item.label, "Pending"),
+    podKillsLastHour: item.podKillsLastHour === null || item.podKillsLastHour === undefined ? null : sanitizePositiveInteger(item.podKillsLastHour),
+    severity: normalizeRouteIntelSeverity(item.severity),
+    shipJumpsLastHour: item.shipJumpsLastHour === null || item.shipJumpsLastHour === undefined ? null : sanitizePositiveInteger(item.shipJumpsLastHour),
+    shipKillsLastHour: item.shipKillsLastHour === null || item.shipKillsLastHour === undefined ? null : sanitizePositiveInteger(item.shipKillsLastHour),
+    summary: sanitizeApiText(item.summary, "Awaiting intel."),
+    system: normalizeRouteIntelSystemRef(item.system),
+    zkillIntel: normalizeZkillIntel(item.zkillIntel),
+  };
+}
+
+function normalizeGoldIntelItem(value: unknown): GoldIntelItem {
+  const item = isRecord(value) ? value : {};
+  return {
+    destination: normalizeRouteIntelSystemRef(item.destination),
+    label: sanitizeApiText(item.label, "Golden route"),
+    origin: normalizeRouteIntelSystemRef(item.origin),
+    routeId: sanitizeApiText(item.routeId),
+    status: normalizeRouteIntelStatus(item.status),
+  };
+}
+
+function normalizeCorruptionIntelItem(value: unknown): CorruptionIntelItem {
+  const item = isRecord(value) ? value : {};
+  return {
+    corruptionPercentage: sanitizeFiniteNumber(item.corruptionPercentage),
+    corruptionState: sanitizePositiveInteger(item.corruptionState),
+    factionId: item.factionId === null || item.factionId === undefined ? null : sanitizePositiveInteger(item.factionId),
+    label: sanitizeApiText(item.label, "Corruption"),
+    originSystemId: item.originSystemId === null || item.originSystemId === undefined ? null : sanitizePositiveInteger(item.originSystemId),
+    severity: normalizeRouteIntelSeverity(item.severity),
+    suppressionPercentage: sanitizeFiniteNumber(item.suppressionPercentage),
+    suppressionState: sanitizePositiveInteger(item.suppressionState),
+    system: normalizeRouteIntelSystemRef(item.system),
+    zkillIntel: normalizeZkillIntel(item.zkillIntel),
+  };
+}
+
+function normalizeGoldIntelDetail(value: unknown): GoldIntelDetail {
+  const detail = isRecord(value) ? value : {};
+  const traffic = isRecord(detail.routeTraffic) ? detail.routeTraffic : null;
+  return {
+    destination: normalizeRouteIntelSystemRef(detail.destination),
+    flag: normalizeRouteFlag(detail.flag),
+    jumps: sanitizePositiveInteger(detail.jumps),
+    origin: normalizeRouteIntelSystemRef(detail.origin),
+    routeId: sanitizeApiText(detail.routeId),
+    routeRisk: normalizeRouteRisk(detail.routeRisk),
+    routeTraffic: traffic ? {
+      coverage: sanitizeFiniteNumber(traffic.coverage),
+      knownSystems: sanitizePositiveInteger(traffic.knownSystems),
+      ...normalizeRouteTrafficLevel(traffic.level),
+      totalPodKillsLastHour: traffic.totalPodKillsLastHour === null || traffic.totalPodKillsLastHour === undefined
+        ? null
+        : sanitizePositiveInteger(traffic.totalPodKillsLastHour),
+      totalShipKillsLastHour: traffic.totalShipKillsLastHour === null || traffic.totalShipKillsLastHour === undefined
+        ? null
+        : sanitizePositiveInteger(traffic.totalShipKillsLastHour),
+      totalShipJumpsLastHour: traffic.totalShipJumpsLastHour === null || traffic.totalShipJumpsLastHour === undefined
+        ? null
+        : sanitizePositiveInteger(traffic.totalShipJumpsLastHour),
+      totalSystems: sanitizePositiveInteger(traffic.totalSystems),
+    } : null,
+    systems: Array.isArray(detail.systems) ? detail.systems.map(normalizeRouteSystem) : [],
+    zkillIntel: normalizeZkillIntel(detail.zkillIntel),
+  };
+}
+
+function normalizeCorruptionIntelDetail(value: unknown): CorruptionIntelDetail {
+  const detail = isRecord(value) ? value : {};
+  return {
+    ...normalizeCorruptionIntelItem(detail),
+    gates: Array.isArray(detail.gates) ? detail.gates.map(normalizeGatecheckGate) : [],
+    podKillsLastHour: detail.podKillsLastHour === null || detail.podKillsLastHour === undefined ? null : sanitizePositiveInteger(detail.podKillsLastHour),
+    shipJumpsLastHour: detail.shipJumpsLastHour === null || detail.shipJumpsLastHour === undefined ? null : sanitizePositiveInteger(detail.shipJumpsLastHour),
+    shipKillsLastHour: detail.shipKillsLastHour === null || detail.shipKillsLastHour === undefined ? null : sanitizePositiveInteger(detail.shipKillsLastHour),
+    summary: sanitizeApiText(detail.summary, "Corruption intel unavailable."),
+  };
+}
+
+function normalizeCrossroadsIntelDetail(value: unknown): CrossroadsIntelDetail {
+  const detail = isRecord(value) ? value : {};
+  return {
+    gates: Array.isArray(detail.gates) ? detail.gates.map(normalizeGatecheckGate) : [],
+    status: normalizeRouteIntelStatus(detail.status),
+    summary: sanitizeApiText(detail.summary, "Crossroads watchlist pending."),
+    system: detail.system ? normalizeRouteIntelSystemRef(detail.system) : null,
+    distanceFromJita: detail.distanceFromJita === null || detail.distanceFromJita === undefined ? null : sanitizePositiveInteger(detail.distanceFromJita),
+    label: sanitizeApiText(detail.label, "Pending"),
+    podKillsLastHour: detail.podKillsLastHour === null || detail.podKillsLastHour === undefined ? null : sanitizePositiveInteger(detail.podKillsLastHour),
+    severity: normalizeRouteIntelSeverity(detail.severity),
+    shipJumpsLastHour: detail.shipJumpsLastHour === null || detail.shipJumpsLastHour === undefined ? null : sanitizePositiveInteger(detail.shipJumpsLastHour),
+    shipKillsLastHour: detail.shipKillsLastHour === null || detail.shipKillsLastHour === undefined ? null : sanitizePositiveInteger(detail.shipKillsLastHour),
+    zkillIntel: normalizeZkillIntel(detail.zkillIntel),
+  };
+}
+
+function normalizeGatecheckGate(value: unknown): GatecheckGate {
+  const gate = isRecord(value) ? value : {};
+  return {
+    destinationSystemId: gate.destinationSystemId === null || gate.destinationSystemId === undefined ? null : sanitizePositiveInteger(gate.destinationSystemId),
+    destinationSystemName: gate.destinationSystemName === null || gate.destinationSystemName === undefined ? null : sanitizeApiText(gate.destinationSystemName),
+    id: sanitizePositiveInteger(gate.id),
+    killmails: Array.isArray(gate.killmails) ? gate.killmails.map(normalizeGatecheckKillmail).slice(0, 8) : [],
+    killsLastHour: sanitizePositiveInteger(gate.killsLastHour),
+    name: sanitizeApiText(gate.name, "Unknown gate"),
+  };
+}
+
+function normalizeGatecheckKillmail(value: unknown): GatecheckKillmail {
+  const killmail = isRecord(value) ? value : {};
+  return {
+    killmailId: sanitizePositiveInteger(killmail.killmailId),
+    labels: Array.isArray(killmail.labels) ? killmail.labels.map((label) => sanitizeApiText(label)).filter(Boolean).slice(0, 8) : [],
+    locationId: killmail.locationId === null || killmail.locationId === undefined ? null : sanitizePositiveInteger(killmail.locationId),
+    totalValue: sanitizePositiveInteger(killmail.totalValue),
+  };
+}
+
+function normalizeRouteIntelSystemRef(value: unknown): RouteIntelSystemRef {
+  const system = isRecord(value) ? value : {};
+  return {
+    color: system.color ? sanitizeHexColor(system.color) : null,
+    id: sanitizePositiveInteger(system.id),
+    name: sanitizeApiText(system.name, "Unknown"),
+    securityDisplay: system.securityDisplay ? sanitizeApiText(system.securityDisplay) : null,
+    serviceType: system.serviceType ? sanitizeApiText(system.serviceType) : null,
+  };
+}
+
+function normalizeRouteIntelStatus(value: unknown): RouteIntelStatus {
+  if (value === "ready" || value === "watchlist_pending" || value === "calibrating" || value === "unavailable") {
+    return value;
+  }
+  return "unavailable";
+}
+
+function normalizeRouteIntelSeverity(value: unknown): RouteIntelSeverity {
+  if (value === "safe" || value === "watched" || value === "active_gank" || value === "severe" || value === "restricted" || value === "unavailable" || value === "pending") {
+    return value;
+  }
+  return "unavailable";
+}
+
+function normalizeZkillIntel(value: unknown): ZkillIntelSummary | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const status: ZkillIntelSummary["status"] = value.status === "ready" ? "ready" : "unavailable";
+  return {
+    fetchedAt: value.fetchedAt === null || value.fetchedAt === undefined ? null : sanitizeApiText(value.fetchedAt),
+    highValueKillmailCount: sanitizePositiveInteger(value.highValueKillmailCount),
+    killmailCount: sanitizePositiveInteger(value.killmailCount),
+    labels: Array.isArray(value.labels) ? value.labels.map((label) => sanitizeApiText(label)).filter(Boolean).slice(0, 8) : [],
+    latestKillmailAt: value.latestKillmailAt === null || value.latestKillmailAt === undefined ? null : sanitizeApiText(value.latestKillmailAt),
+    pvpKillmailCount: sanitizePositiveInteger(value.pvpKillmailCount),
+    recentKillmails: Array.isArray(value.recentKillmails) ? value.recentKillmails.map(normalizeZkillKillmail).slice(0, 8) : [],
+    status,
+    totalValue: sanitizePositiveInteger(value.totalValue),
+  };
+}
+
+function normalizeZkillKillmail(value: unknown): ZkillKillmailSummary {
+  const killmail = isRecord(value) ? value : {};
+  return {
+    destroyedValue: killmail.destroyedValue === null || killmail.destroyedValue === undefined ? null : sanitizePositiveInteger(killmail.destroyedValue),
+    droppedValue: killmail.droppedValue === null || killmail.droppedValue === undefined ? null : sanitizePositiveInteger(killmail.droppedValue),
+    killmailId: sanitizePositiveInteger(killmail.killmailId),
+    labels: Array.isArray(killmail.labels) ? killmail.labels.map((label) => sanitizeApiText(label)).filter(Boolean).slice(0, 8) : [],
+    locationId: killmail.locationId === null || killmail.locationId === undefined ? null : sanitizePositiveInteger(killmail.locationId),
+    npc: typeof killmail.npc === "boolean" ? killmail.npc : null,
+    solo: typeof killmail.solo === "boolean" ? killmail.solo : null,
+    totalValue: sanitizePositiveInteger(killmail.totalValue),
+  };
+}
+
+function normalizeRouteFlag(value: unknown): GoldIntelDetail["flag"] {
+  if (value === "shortest" || value === "secure" || value === "insecure") {
+    return value;
+  }
+  return "secure";
 }
 
 function normalizePricingMode(value: unknown): PricingMode {

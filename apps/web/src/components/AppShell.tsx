@@ -1,6 +1,6 @@
 import { Activity, Calculator, RadioTower } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { fetchEsiStatus, type EsiStatus } from "../lib/api";
 import { StatusBadge } from "./ui/StatusBadge";
@@ -113,6 +113,7 @@ function DiscordMark() {
 function useTranquilityStatus() {
   const [status, setStatus] = useState<EsiStatus | null>(null);
   const [healthy, setHealthy] = useState(false);
+  const previousHealthyRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -123,12 +124,19 @@ function useTranquilityStatus() {
         if (!mounted) {
           return;
         }
+        const nextHealthy = !nextStatus.vip;
+        const wasHealthy = previousHealthyRef.current;
+        previousHealthyRef.current = nextHealthy;
         setStatus(nextStatus);
-        setHealthy(!nextStatus.vip);
+        setHealthy(nextHealthy);
+        if (nextHealthy && wasHealthy === false) {
+          window.dispatchEvent(new CustomEvent("solane:esi-restored", { detail: nextStatus }));
+        }
       } catch {
         if (!mounted) {
           return;
         }
+        previousHealthyRef.current = false;
         setHealthy(false);
       }
     };

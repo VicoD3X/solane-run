@@ -57,7 +57,17 @@ export function RouteIntelPage() {
   const [activeIntel, setActiveIntel] = useState<ActiveIntel | null>(null);
   const [closingIntel, setClosingIntel] = useState<ActiveIntel | null>(null);
   const [detail, setDetail] = useState<IntelDetailState>(initialDetailState);
+  const [esiRecoveryKey, setEsiRecoveryKey] = useState(0);
   const closeTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const handleEsiRestored = () => {
+      setEsiRecoveryKey((currentKey) => currentKey + 1);
+    };
+
+    window.addEventListener("solane:esi-restored", handleEsiRestored);
+    return () => window.removeEventListener("solane:esi-restored", handleEsiRestored);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -85,7 +95,7 @@ export function RouteIntelPage() {
       mounted = false;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [esiRecoveryKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -119,7 +129,7 @@ export function RouteIntelPage() {
     return () => {
       mounted = false;
     };
-  }, [activeIntel]);
+  }, [activeIntel, esiRecoveryKey]);
 
   const visibleGold = useMemo(() => overview?.gold.items ?? [], [overview]);
   const visibleCorruption = useMemo(() => overview?.corruption.items ?? [], [overview]);

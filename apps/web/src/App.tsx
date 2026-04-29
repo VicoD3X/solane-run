@@ -112,6 +112,7 @@ function App() {
   const [sizeSelectorView, setSizeSelectorView] = useState<SizeSelectorView | null>(null);
   const [sizePlaceholderView, setSizePlaceholderView] = useState<SizePlaceholderView | null>({ closing: false });
   const [serviceWindow, setServiceWindow] = useState(() => serviceWindowFallback());
+  const [esiRecoveryKey, setEsiRecoveryKey] = useState(0);
   const [, setIsSyncing] = useState(false);
   const inputRef = useRef(input);
   const quoteRef = useRef(quote);
@@ -148,6 +149,15 @@ function App() {
   useEffect(() => {
     quoteValidationRef.current = quoteValidation;
   }, [quoteValidation]);
+
+  useEffect(() => {
+    const handleEsiRestored = () => {
+      setEsiRecoveryKey((currentKey) => currentKey + 1);
+    };
+
+    window.addEventListener("solane:esi-restored", handleEsiRestored);
+    return () => window.removeEventListener("solane:esi-restored", handleEsiRestored);
+  }, []);
 
   const syncRoute = useCallback(async () => {
     const routeInput = inputRef.current;
@@ -194,7 +204,7 @@ function App() {
     }
 
     void syncRoute();
-  }, [pickupId, destinationId, syncRoute]);
+  }, [pickupId, destinationId, syncRoute, esiRecoveryKey]);
 
   useEffect(() => {
     if (endpointsReady) {
@@ -335,7 +345,7 @@ function App() {
     void fetchQuoteCalculation(pricingInput)
       .then(applyPricing)
       .catch(applyFallback);
-  }, [collateralText, input]);
+  }, [collateralText, input, esiRecoveryKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -360,7 +370,7 @@ function App() {
       mounted = false;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [esiRecoveryKey]);
 
   useEffect(() => {
     if (showRoadOverview) {

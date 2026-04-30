@@ -1563,7 +1563,8 @@ main {
 }
 
 .road-risk-report,
-.road-standard-report {
+.road-standard-report,
+.road-safety-hold-report {
   grid-column: 1 / -1;
   grid-template-columns: auto minmax(0, 0.88fr) minmax(184px, 0.72fr);
   align-items: center;
@@ -1630,7 +1631,8 @@ main {
 
 .road-traffic-report > strong,
 .road-risk-report > strong,
-.road-standard-report > strong {
+.road-standard-report > strong,
+.road-safety-hold-report > strong {
   grid-column: 3;
   grid-row: 1;
   justify-self: end;
@@ -1775,6 +1777,18 @@ main {
 
 .road-standard-report p {
   color: #eee2ba;
+}
+
+.road-safety-hold-report {
+  --traffic-color: #f4b24f;
+}
+
+.road-safety-hold-report p {
+  color: #ffd99b;
+}
+
+.road-safety-hold-report strong {
+  color: #ffe0a6;
 }
 
 .road-risk-meta {
@@ -2439,6 +2453,11 @@ main {
   border-color: rgba(255, 92, 110, 0.46);
   background: rgba(34, 5, 12, 0.54);
   color: #ffb8c0;
+}
+
+.quote-context-warning-safety {
+  border-color: rgba(244, 178, 79, 0.36);
+  background: rgba(28, 18, 5, 0.48);
 }
 
 .estimate-block {
@@ -5060,6 +5079,7 @@ main {
   .road-risk-report,
   .road-traffic-report,
   .road-standard-report,
+  .road-safety-hold-report,
   .road-state-emblem,
   .road-state-copy,
   .road-route-state > strong,
@@ -5070,7 +5090,8 @@ main {
 
   .road-risk-report,
   .road-traffic-report,
-  .road-standard-report {
+  .road-standard-report,
+  .road-safety-hold-report {
     grid-template-columns: 1fr;
   }
 

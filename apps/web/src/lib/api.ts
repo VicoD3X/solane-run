@@ -294,8 +294,10 @@ function normalizeRouteRisk(value: unknown): RouteResult["routeRisk"] {
       ? null
       : sanitizePositiveInteger(value.lowSecShipKillsLastHour),
     reason: typeof value.reason === "string" ? sanitizeApiText(value.reason) : null,
+    riskSource: normalizeRouteRiskSource(value.riskSource),
     routeStandard: value.routeStandard === "golden" ? "golden" : "standard",
     routeStandardLabel: value.routeStandard === "golden" ? "Golden Standard" : "Standard Route",
+    safetyHold: normalizeSafetyHold(value.safetyHold),
     trend: normalizeRouteRiskTrend(value.trend),
   };
 }
@@ -331,6 +333,50 @@ function normalizeRouteRiskTrend(value: unknown): NonNullable<RouteResult["route
     return value;
   }
   return null;
+}
+
+function normalizeRouteRiskSource(value: unknown): NonNullable<RouteResult["routeRisk"]>["riskSource"] {
+  if (
+    value === "none" ||
+    value === "static" ||
+    value === "insurgency" ||
+    value === "live_pvp" ||
+    value === "rolling_24h" ||
+    value === "mixed" ||
+    value === "unavailable"
+  ) {
+    return value;
+  }
+  return "none";
+}
+
+function normalizeSafetyHold(value: unknown): NonNullable<RouteResult["routeRisk"]>["safetyHold"] {
+  const hold = isRecord(value) ? value : {};
+  const systems = Array.isArray(hold.systems)
+    ? hold.systems.map(normalizeSafetyHoldSystem).filter((system) => system.id > 0 && system.name.length > 0)
+    : [];
+  const active = Boolean(hold.active) && systems.length > 0;
+
+  return {
+    active,
+    label: typeof hold.label === "string" ? sanitizeApiText(hold.label) : active ? "Safety Hold Watch" : "No Safety Hold",
+    reason: typeof hold.reason === "string" ? sanitizeApiText(hold.reason) : null,
+    systems,
+  };
+}
+
+function normalizeSafetyHoldSystem(value: unknown): NonNullable<RouteResult["routeRisk"]>["safetyHold"]["systems"][number] {
+  const system = isRecord(value) ? value : {};
+  const level = normalizeRouteRiskLevel(system.level);
+  return {
+    id: sanitizePositiveInteger(system.id),
+    label: typeof system.label === "string" ? sanitizeApiText(system.label) : `${level.label} 24H`,
+    lastSyncedAt: typeof system.lastSyncedAt === "string" ? sanitizeApiText(system.lastSyncedAt) : null,
+    level: level.level,
+    name: sanitizeApiText(system.name),
+    reason: typeof system.reason === "string" ? sanitizeApiText(system.reason) : "Recent 24H risk signal.",
+    serviceType: normalizeNullableServiceType(system.serviceType),
+  };
 }
 
 function normalizeServiceWindowLevel(value: unknown): Pick<ServiceWindowSummary, "label" | "level"> {
@@ -645,6 +691,12 @@ function normalizeServiceType(value: unknown): SolarSystem["serviceType"] {
   return value === "Pochven" || value === "Thera" || value === "HighSec" || value === "LowSec" || value === "Zarzakh"
     ? value
     : "HighSec";
+}
+
+function normalizeNullableServiceType(value: unknown): SolarSystem["serviceType"] | null {
+  return value === "Pochven" || value === "Thera" || value === "HighSec" || value === "LowSec" || value === "Zarzakh"
+    ? value
+    : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

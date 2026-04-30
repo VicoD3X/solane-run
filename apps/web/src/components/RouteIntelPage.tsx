@@ -484,7 +484,7 @@ function GoldDetail({ detail }: { detail: IntelDetailState }) {
       <div className="route-intel-metrics route-intel-command-metrics route-intel-corridor-metrics">
         <Metric label="Jumps" value={formatMetric(gold.jumps)} />
         <Metric label="Traffic" value={traffic?.label ?? "Syncing"} />
-        <Metric label="Risk" value={risk?.label ?? "Syncing"} />
+        <Metric label="Risk" value={risk?.safetyHold.active ? "Safety Hold" : risk?.label ?? "Syncing"} />
         <Metric label="Ships destroyed" value={formatMetric(traffic?.totalShipKillsLastHour)} />
         <Metric label="ISK destroyed" value={formatIsk(gold.zkillIntel?.totalValue)} />
       </div>

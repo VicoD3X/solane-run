@@ -52,7 +52,9 @@ export function RouteOverview({ closing = false, input, risk, route }: RouteOver
           traffic={routeTraffic}
           tone={`road-traffic-${routeTraffic.level}`}
         />
-        {routeRisk.routeStandard === "golden" && !routeRisk.isBlocking ? (
+        {!routeRisk.isBlocking && routeRisk.safetyHold.active ? (
+          <SafetyHoldReport icon={<ShieldAlert size={15} />} risk={routeRisk} />
+        ) : routeRisk.routeStandard === "golden" && !routeRisk.isBlocking ? (
           <GoldenStandardReport icon={<BadgeCheck size={15} />} risk={routeRisk} />
         ) : (
           <RouteRiskReport
@@ -148,6 +150,28 @@ function RouteRiskReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSumma
             <b>{risk.lowSecShipKillsLastHour.toLocaleString("en-US")} last hour</b>
           </span>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function SafetyHoldReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSummary }) {
+  const affected = risk.safetyHold.systems.slice(0, 4);
+  const hiddenCount = Math.max(risk.safetyHold.systems.length - affected.length, 0);
+
+  return (
+    <div className="road-intel-card road-route-state road-safety-hold-report road-risk-hot" aria-label="Safety Hold Watch">
+      <div className="road-state-emblem" aria-hidden="true">{icon}</div>
+      <div className="road-state-copy">
+        <span>Safety Hold Watch</span>
+        <p>{risk.safetyHold.reason ?? "Open route with elevated 24H risk history."}</p>
+      </div>
+      <strong>24H Watch</strong>
+      <div className="road-risk-meta" aria-label="Safety hold details">
+        <span>
+          Systems
+          <b>{affected.map((system) => `${system.name} ${system.label}`).join(", ")}{hiddenCount > 0 ? ` +${hiddenCount}` : ""}</b>
+        </span>
       </div>
     </div>
   );
@@ -334,6 +358,13 @@ function fallbackRouteRisk(): RouteRiskSummary {
     routeStandard: "standard",
     routeStandardLabel: "Standard Route",
     lowSecShipKillsLastHour: null,
+    riskSource: "unavailable",
+    safetyHold: {
+      active: false,
+      label: "No Safety Hold",
+      reason: null,
+      systems: [],
+    },
     trend: "unavailable",
   };
 }

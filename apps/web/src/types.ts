@@ -104,10 +104,28 @@ export type RouteRiskLevel = "nominal" | "watched" | "hot" | "flashpoint" | "res
 
 export type RouteRiskConfidence = "live" | "partial" | "calibrating" | "unavailable";
 export type RouteRiskTrend = "stable" | "recurrent" | "volatile" | "unavailable";
+export type RouteRiskSource = "none" | "static" | "insurgency" | "live_pvp" | "rolling_24h" | "mixed" | "unavailable";
 
 export type RouteRiskSystem = {
   id: number;
   name: string;
+};
+
+export type SafetyHoldSystem = {
+  id: number;
+  name: string;
+  serviceType?: ServiceType | null;
+  level: RouteRiskLevel;
+  label: string;
+  reason: string;
+  lastSyncedAt: string | null;
+};
+
+export type SafetyHoldSummary = {
+  active: boolean;
+  label: string;
+  reason: string | null;
+  systems: SafetyHoldSystem[];
 };
 
 export type RouteRiskSummary = {
@@ -122,6 +140,8 @@ export type RouteRiskSummary = {
   routeStandard: "golden" | "standard";
   routeStandardLabel: "Golden Standard" | "Standard Route";
   lowSecShipKillsLastHour: number | null;
+  riskSource: RouteRiskSource;
+  safetyHold: SafetyHoldSummary;
 };
 
 export type ServiceWindowLevel = "low_activity" | "medium_activity" | "high_activity";

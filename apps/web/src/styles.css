@@ -3027,15 +3027,15 @@ main {
 }
 
 .route-intel-stack:has(.route-intel-block:nth-child(1).route-intel-block-active) {
-  grid-template-rows: minmax(0, 1.42fr) minmax(0, 0.82fr) minmax(0, 0.82fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .route-intel-stack:has(.route-intel-block:nth-child(2).route-intel-block-active) {
-  grid-template-rows: minmax(0, 0.82fr) minmax(0, 1.42fr) minmax(0, 0.82fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .route-intel-stack:has(.route-intel-block:nth-child(3).route-intel-block-active) {
-  grid-template-rows: minmax(0, 0.82fr) minmax(0, 0.82fr) minmax(0, 1.42fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .about-page {
@@ -3662,33 +3662,35 @@ main {
 
 .route-intel-detail {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   height: 100%;
   min-height: 0;
+  align-content: start;
+  justify-items: stretch;
 }
 
 .route-intel-detail-crossroads {
   align-content: start;
-  justify-items: center;
-  gap: 10px;
+  justify-items: stretch;
+  gap: 8px;
   width: 100%;
-  padding: 2px 0 0;
+  padding: 0;
 }
 
 .route-intel-detail-gold {
   align-content: start;
-  justify-items: center;
-  gap: 7px;
+  justify-items: stretch;
+  gap: 8px;
   width: 100%;
   padding: 0;
 }
 
 .route-intel-detail-corruption {
   align-content: start;
-  justify-items: center;
-  gap: 10px;
+  justify-items: stretch;
+  gap: 8px;
   width: 100%;
-  padding: 2px 0 0;
+  padding: 0;
 }
 
 .route-intel-detail-muted {
@@ -3703,19 +3705,19 @@ main {
 }
 
 .route-intel-system-head {
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
 }
 
 .route-intel-corridor-head {
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .route-intel-system-head strong {
   color: #f6fbff;
-  font-size: clamp(1rem, 1.45vw, 1.32rem);
+  font-size: clamp(0.92rem, 1.08vw, 1.12rem);
   font-weight: 800;
   letter-spacing: 0.01em;
   text-shadow: 0 0 18px rgba(226, 242, 255, 0.12);
@@ -3723,7 +3725,7 @@ main {
 
 .route-intel-corridor-head strong {
   color: #fff4c4;
-  font-size: clamp(1.04rem, 1.55vw, 1.42rem);
+  font-size: clamp(0.96rem, 1.16vw, 1.18rem);
   font-weight: 900;
   letter-spacing: 0.01em;
   text-shadow: 0 0 18px rgba(255, 214, 102, 0.16);
@@ -3745,14 +3747,14 @@ main {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  min-width: 90px;
-  min-height: 32px;
+  min-width: 76px;
+  min-height: 28px;
   border: 1px solid currentColor;
   border-radius: 999px;
   background: rgba(3, 10, 17, 0.58);
-  padding: 0 12px;
+  padding: 0 10px;
   font-family: var(--font-accent);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -4186,20 +4188,20 @@ main {
 
 .route-intel-command-metrics {
   display: grid;
-  width: min(100%, 920px);
-  gap: 10px;
+  width: 100%;
+  gap: 7px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .route-intel-command-metrics span {
   justify-content: center;
-  min-height: 38px;
+  min-height: 32px;
   border-color: rgba(137, 196, 236, 0.22);
   background:
     linear-gradient(180deg, rgba(86, 166, 230, 0.09), rgba(3, 10, 17, 0.5)),
     rgba(3, 10, 17, 0.58);
   color: #b8ccdd;
-  padding: 0 12px;
+  padding: 0 9px;
   text-align: center;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -4230,13 +4232,13 @@ main {
 
 .route-intel-command-metrics b {
   color: #f7fbff;
-  font-size: 0.84rem;
+  font-size: 0.76rem;
   font-weight: 900;
   text-shadow: 0 0 14px rgba(226, 242, 255, 0.12);
 }
 
 .route-intel-corridor-metrics {
-  width: min(100%, 1040px);
+  width: 100%;
   gap: 7px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
@@ -4254,7 +4256,7 @@ main {
 }
 
 .route-intel-corruption-metrics {
-  width: min(100%, 1040px);
+  width: 100%;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -4326,22 +4328,22 @@ main {
 
 .route-intel-gate-kill-strip {
   display: grid;
-  width: min(100%, 1080px);
-  gap: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  width: 100%;
+  gap: 7px;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
 }
 
 .route-intel-gate-kill-strip span {
   display: grid;
   justify-items: center;
-  gap: 4px;
-  min-height: 62px;
+  gap: 3px;
+  min-height: 52px;
   border: 1px solid rgba(238, 247, 255, 0.48);
   border-radius: 7px;
   background:
     linear-gradient(180deg, rgba(103, 192, 144, 0.095), rgba(3, 10, 17, 0.62)),
     rgba(3, 10, 17, 0.62);
-  padding: 8px 10px 7px;
+  padding: 6px 8px;
   text-align: center;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -4369,7 +4371,7 @@ main {
   max-width: 100%;
   color: #b5c7d7;
   font-family: var(--font-accent);
-  font-size: 0.6rem;
+  font-size: 0.54rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-overflow: ellipsis;
@@ -4379,7 +4381,7 @@ main {
 
 .route-intel-gate-kill-strip b {
   color: #f1f8ff;
-  font-size: 1.18rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 0 14px rgba(241, 248, 255, 0.16);
@@ -4391,16 +4393,16 @@ main {
 }
 
 .route-intel-detail-crossroads > p {
-  justify-self: center;
-  min-height: 24px;
+  justify-self: start;
+  min-height: 22px;
   border: 1px solid rgba(103, 192, 144, 0.44);
   border-radius: 999px;
   background: rgba(103, 192, 144, 0.08);
   color: #d7f5e5;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 5px 12px;
-  font-size: 0.64rem;
+  padding: 4px 10px;
+  font-size: 0.58rem;
   font-weight: 800;
   line-height: 1;
   text-align: center;

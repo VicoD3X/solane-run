@@ -22,8 +22,17 @@ export function AppShell({
 }: AppShellProps) {
   const { status, healthy, eveTime } = useTranquilityStatus();
   const currentPath = window.location.pathname;
+  const isRouteIntel = currentPath === "/route-intel";
   const accentRgb = hexToRgb(accentColor);
   const destinationRgb = hexToRgb(destinationColor);
+  const shellClassName = [
+    "app-shell",
+    "min-h-screen",
+    routeVisible ? "app-shell-route-visible" : "",
+    isRouteIntel ? "app-shell-route-intel" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const shellStyle = {
     "--service-accent": accentColor,
     "--service-accent-rgb": accentRgb,
@@ -33,7 +42,7 @@ export function AppShell({
 
   return (
     <div
-      className={`app-shell min-h-screen ${routeVisible ? "app-shell-route-visible" : ""}`}
+      className={shellClassName}
       data-service={serviceLabel ?? "Solane"}
       style={shellStyle}
     >

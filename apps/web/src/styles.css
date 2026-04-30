@@ -163,6 +163,16 @@ strong {
   --layout-width: min(1540px, 94%);
 }
 
+.app-shell-route-intel {
+  --layout-width: clamp(1310px, 72vw, 1760px);
+}
+
+@media (min-width: 3000px) {
+  .app-shell-route-intel {
+    --layout-width: clamp(1680px, 54vw, 1880px);
+  }
+}
+
 .topbar {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
@@ -3363,6 +3373,12 @@ main {
   transform-origin: top center;
 }
 
+.route-intel-block-active .route-intel-block-body {
+  display: grid;
+  align-content: center;
+  align-items: center;
+}
+
 .route-intel-block-body::-webkit-scrollbar {
   width: 8px;
 }
@@ -3665,35 +3681,29 @@ main {
 
 .route-intel-detail {
   display: grid;
-  gap: 5px;
-  height: 100%;
+  width: 100%;
+  height: auto;
   min-height: 0;
-  align-content: start;
+  align-items: center;
+  align-content: center;
   justify-items: stretch;
+  gap: clamp(12px, 1.55vh, 18px);
+  padding: 0;
 }
 
 .route-intel-detail-crossroads {
-  align-content: start;
   justify-items: stretch;
-  gap: 5px;
   width: 100%;
-  padding: 0;
 }
 
 .route-intel-detail-gold {
-  align-content: start;
   justify-items: stretch;
-  gap: 5px;
   width: 100%;
-  padding: 0;
 }
 
 .route-intel-detail-corruption {
-  align-content: start;
   justify-items: stretch;
-  gap: 5px;
   width: 100%;
-  padding: 0;
 }
 
 .route-intel-detail-muted {
@@ -3708,22 +3718,24 @@ main {
 }
 
 .route-intel-system-head {
+  align-self: center;
   justify-content: center;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: clamp(2px, 0.35vh, 5px);
   text-align: center;
 }
 
 .route-intel-corridor-head {
+  align-self: center;
   justify-content: center;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: clamp(2px, 0.35vh, 5px);
   text-align: center;
 }
 
 .route-intel-system-head strong {
   color: #f6fbff;
-  font-size: clamp(0.92rem, 1.08vw, 1.12rem);
+  font-size: clamp(1.14rem, 1.42vw, 1.48rem);
   font-weight: 800;
   letter-spacing: 0.01em;
   text-shadow: 0 0 18px rgba(226, 242, 255, 0.12);
@@ -3731,7 +3743,7 @@ main {
 
 .route-intel-corridor-head strong {
   color: #fff4c4;
-  font-size: clamp(0.96rem, 1.16vw, 1.18rem);
+  font-size: clamp(1.02rem, 1.24vw, 1.28rem);
   font-weight: 900;
   letter-spacing: 0.01em;
   text-shadow: 0 0 18px rgba(255, 214, 102, 0.16);
@@ -3754,7 +3766,7 @@ main {
   justify-content: center;
   align-items: center;
   min-width: 76px;
-  min-height: 28px;
+  min-height: 25px;
   border: 1px solid currentColor;
   border-radius: 999px;
   background: rgba(3, 10, 17, 0.58);
@@ -3789,14 +3801,14 @@ main {
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  min-height: 28px;
+  min-height: 24px;
   border: 1px solid rgba(151, 185, 215, 0.14);
   border-radius: 7px;
   background: rgba(3, 10, 17, 0.48);
   color: #9fb2c4;
   padding: 0 10px;
   font-family: var(--font-accent);
-  font-size: 0.62rem;
+  font-size: 0.67rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -3847,8 +3859,9 @@ main {
 }
 
 .route-intel-corridor-path {
+  align-self: center;
   justify-content: center;
-  align-content: start;
+  align-content: center;
   width: min(100%, 1180px);
   gap: 4px 5px;
   min-height: 0;
@@ -4194,20 +4207,21 @@ main {
 
 .route-intel-command-metrics {
   display: grid;
+  align-self: center;
   width: 100%;
-  gap: 6px;
+  gap: 5px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .route-intel-command-metrics span {
   justify-content: center;
-  min-height: 28px;
+  min-height: 22px;
   border-color: rgba(137, 196, 236, 0.22);
   background:
     linear-gradient(180deg, rgba(86, 166, 230, 0.09), rgba(3, 10, 17, 0.5)),
     rgba(3, 10, 17, 0.58);
   color: #b8ccdd;
-  padding: 0 9px;
+  padding: 0 8px;
   text-align: center;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -4238,19 +4252,19 @@ main {
 
 .route-intel-command-metrics b {
   color: #f7fbff;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 900;
   text-shadow: 0 0 14px rgba(226, 242, 255, 0.12);
 }
 
 .route-intel-corridor-metrics {
   width: 100%;
-  gap: 7px;
+  gap: 6px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .route-intel-corridor-metrics span {
-  min-height: 28px;
+  min-height: 22px;
   padding: 0 8px;
   border-color: rgba(255, 214, 102, 0.24);
   background:
@@ -4334,16 +4348,18 @@ main {
 
 .route-intel-gate-kill-strip {
   display: grid;
+  align-self: center;
   width: 100%;
   gap: 6px;
   grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  padding-top: 0;
 }
 
 .route-intel-gate-kill-strip span {
   display: grid;
   justify-items: center;
-  gap: 3px;
-  min-height: 46px;
+  gap: 2px;
+  min-height: clamp(38px, 4.4vh, 44px);
   border: 1px solid rgba(238, 247, 255, 0.48);
   border-radius: 7px;
   background:
@@ -4377,7 +4393,7 @@ main {
   max-width: 100%;
   color: #b5c7d7;
   font-family: var(--font-accent);
-  font-size: 0.54rem;
+  font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-overflow: ellipsis;
@@ -4399,16 +4415,17 @@ main {
 }
 
 .route-intel-detail-crossroads > p {
+  align-self: center;
   justify-self: center;
-  min-height: 18px;
+  min-height: 19px;
   border: 1px solid rgba(103, 192, 144, 0.44);
   border-radius: 999px;
   background: rgba(103, 192, 144, 0.08);
   color: #d7f5e5;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 3px 10px;
-  font-size: 0.58rem;
+  padding: 3px 12px;
+  font-size: 0.64rem;
   font-weight: 800;
   line-height: 1;
   text-align: center;
@@ -4419,8 +4436,10 @@ main {
 }
 
 .route-intel-detail-corruption > p {
+  align-self: center;
   justify-self: center;
   width: min(100%, 720px);
+  margin-top: 0;
   text-align: center;
 }
 
@@ -4638,16 +4657,16 @@ main {
   }
 
   .route-intel-metrics {
-    animation-delay: 55ms;
+    animation-delay: 0ms;
   }
 
   .route-intel-waypoints,
   .route-intel-killmail-strip {
-    animation-delay: 95ms;
+    animation-delay: 0ms;
   }
 
   .route-intel-detail:not(.route-intel-detail-crossroads) p {
-    animation-delay: 125ms;
+    animation-delay: 0ms;
   }
 }
 
@@ -4890,6 +4909,19 @@ main {
   main:has(.route-intel-cockpit) {
     gap: 12px;
     padding-top: 12px;
+  }
+
+  .app-shell-route-intel main:has(.route-intel-cockpit) {
+    padding-top: clamp(10px, 1.2vh, 18px);
+  }
+
+  .app-shell-route-intel .route-intel-cockpit {
+    flex: 0 1 auto;
+  }
+
+  .app-shell-route-intel .route-intel-stack {
+    flex: 0 1 clamp(800px, calc(100vh - 218px), 980px);
+    max-height: 980px;
   }
 
   main:has(.about-page) {

@@ -121,13 +121,7 @@ Expected shape:
     "routeStandard": "golden",
     "routeStandardLabel": "Golden Standard",
     "lowSecShipKillsLastHour": null,
-    "riskSource": "none",
-    "safetyHold": {
-      "active": false,
-      "label": "No Safety Hold",
-      "reason": null,
-      "systems": []
-    }
+    "riskSource": "none"
   },
   "jumps": 2
 }
@@ -136,8 +130,6 @@ Expected shape:
 `shipJumpsLastHour` may be `null` when traffic data is unavailable. `routeTraffic` may report `Unavailable` and should not block the route display.
 
 `routeRisk` is a display-safe Solane Run risk signal. `Restricted` may block the quote, while smart PVP risk levels can be shown without exposing internal scoring rules. `trend` is optional and may be `stable`, `recurrent`, `volatile`, or `unavailable`. `routeStandard` is a route comfort label only and never bypasses blocking risk controls. `lowSecShipKillsLastHour` is only populated when LowSec systems on the route are covered by Route Risk telemetry.
-
-`safetyHold.active=true` means the route remains open but one or more LowSec/Pochven systems have elevated rolling 24H PVP telemetry. The frontend may show `Safety Hold Watch` as a non-blocking warning; it must not treat this as `Restricted`.
 
 The calculator should prefer a blocking risk returned by quote validation/calculation over a non-blocking or unavailable route-only risk. This keeps endpoint-level restrictions visible immediately while the full route overview is still syncing.
 

@@ -1563,8 +1563,7 @@ main {
 }
 
 .road-risk-report,
-.road-standard-report,
-.road-safety-hold-report {
+.road-standard-report {
   grid-column: 1 / -1;
   grid-template-columns: auto minmax(0, 0.88fr) minmax(184px, 0.72fr);
   align-items: center;
@@ -1631,8 +1630,7 @@ main {
 
 .road-traffic-report > strong,
 .road-risk-report > strong,
-.road-standard-report > strong,
-.road-safety-hold-report > strong {
+.road-standard-report > strong {
   grid-column: 3;
   grid-row: 1;
   justify-self: end;
@@ -1777,18 +1775,6 @@ main {
 
 .road-standard-report p {
   color: #eee2ba;
-}
-
-.road-safety-hold-report {
-  --traffic-color: #f4b24f;
-}
-
-.road-safety-hold-report p {
-  color: #ffd99b;
-}
-
-.road-safety-hold-report strong {
-  color: #ffe0a6;
 }
 
 .road-risk-meta {
@@ -2455,11 +2441,6 @@ main {
   color: #ffb8c0;
 }
 
-.quote-context-warning-safety {
-  border-color: rgba(244, 178, 79, 0.36);
-  background: rgba(28, 18, 5, 0.48);
-}
-
 .estimate-block {
   position: relative;
   padding-bottom: 22px;
@@ -3045,6 +3026,18 @@ main {
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.route-intel-stack:has(.route-intel-block:nth-child(1).route-intel-block-active) {
+  grid-template-rows: minmax(0, 1.42fr) minmax(0, 0.82fr) minmax(0, 0.82fr);
+}
+
+.route-intel-stack:has(.route-intel-block:nth-child(2).route-intel-block-active) {
+  grid-template-rows: minmax(0, 0.82fr) minmax(0, 1.42fr) minmax(0, 0.82fr);
+}
+
+.route-intel-stack:has(.route-intel-block:nth-child(3).route-intel-block-active) {
+  grid-template-rows: minmax(0, 0.82fr) minmax(0, 0.82fr) minmax(0, 1.42fr);
+}
+
 .about-page {
   display: flex;
   flex: 1;
@@ -3511,6 +3504,21 @@ main {
   font-family: var(--font-accent);
   font-size: 0.66rem;
   font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .route-intel-support-popover {
+    position: fixed;
+    top: 128px;
+    left: 50vw;
+    width: calc(100vw - 28px);
+    max-width: 280px;
+    transform: translate(-50%, -5px) scale(0.98);
+  }
+
+  .route-intel-support-popover-open {
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 .route-intel-corruption-grid {
@@ -5079,7 +5087,6 @@ main {
   .road-risk-report,
   .road-traffic-report,
   .road-standard-report,
-  .road-safety-hold-report,
   .road-state-emblem,
   .road-state-copy,
   .road-route-state > strong,
@@ -5090,8 +5097,7 @@ main {
 
   .road-risk-report,
   .road-traffic-report,
-  .road-standard-report,
-  .road-safety-hold-report {
+  .road-standard-report {
     grid-template-columns: 1fr;
   }
 

@@ -34,9 +34,6 @@ export function QuotePanel({ input, result, serviceWindow }: QuotePanelProps) {
   const serviceWindowWarning = input.speed === "rush" && serviceWindow.level === "low_activity"
     ? rushWindowWarning(serviceWindow)
     : null;
-  const safetyHoldWarning = !isRiskRestricted && result.risk?.safetyHold.active
-    ? safetyHoldMessage(result.risk.safetyHold.systems.length)
-    : null;
 
   useEffect(() => {
     if (routePair) {
@@ -140,11 +137,6 @@ export function QuotePanel({ input, result, serviceWindow }: QuotePanelProps) {
           {serviceWindowWarning}
         </p>
       ) : null}
-      {safetyHoldWarning ? (
-        <p className="quote-context-warning quote-context-warning-safety">
-          {safetyHoldWarning}
-        </p>
-      ) : null}
     </aside>
   );
 }
@@ -154,11 +146,6 @@ function rushWindowWarning(serviceWindow: ServiceWindowSummary) {
     return "Rush during Low Activity is handled with limited availability.";
   }
   return null;
-}
-
-function safetyHoldMessage(systemCount: number) {
-  const systemLabel = systemCount > 1 ? `${systemCount} systems` : "1 system";
-  return `Safety Hold Watch: ${systemLabel} recently unstable on 24H telemetry. Route remains open.`;
 }
 
 function blockedReasonTitle(code: QuoteResult["blockedCode"]) {

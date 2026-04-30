@@ -3860,12 +3860,16 @@ main {
 
 .route-intel-corridor-path {
   align-self: center;
+  justify-self: center;
   justify-content: center;
   align-content: center;
   width: min(100%, 1180px);
+  max-width: 100%;
   gap: 4px 5px;
   min-height: 0;
+  margin-inline: auto;
   padding: 1px 0;
+  text-align: center;
 }
 
 .route-intel-waypoints span {

@@ -158,6 +158,7 @@ function RouteRiskReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSumma
 function SafetyHoldReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSummary }) {
   const affected = risk.safetyHold.systems.slice(0, 4);
   const hiddenCount = Math.max(risk.safetyHold.systems.length - affected.length, 0);
+  const systemLabel = affected.map((system) => `${system.name} ${system.label}`).join(", ");
 
   return (
     <div className="road-intel-card road-route-state road-safety-hold-report road-risk-hot" aria-label="Safety Hold Watch">
@@ -166,12 +167,22 @@ function SafetyHoldReport({ icon, risk }: { icon: ReactNode; risk: RouteRiskSumm
         <span>Safety Hold Watch</span>
         <p>{risk.safetyHold.reason ?? "Open route with elevated 24H risk history."}</p>
       </div>
-      <strong>24H Watch</strong>
+      <strong>Open</strong>
       <div className="road-risk-meta" aria-label="Safety hold details">
         <span>
-          Systems
-          <b>{affected.map((system) => `${system.name} ${system.label}`).join(", ")}{hiddenCount > 0 ? ` +${hiddenCount}` : ""}</b>
+          Signal
+          <b>24H watch</b>
         </span>
+        <span>
+          Status
+          <b>Non-blocking</b>
+        </span>
+        {affected.length > 0 ? (
+          <span>
+            Systems
+            <b>{systemLabel}{hiddenCount > 0 ? ` +${hiddenCount}` : ""}</b>
+          </span>
+        ) : null}
       </div>
     </div>
   );

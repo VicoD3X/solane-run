@@ -3176,6 +3176,7 @@ main {
 
 .route-intel-block {
   display: flex;
+  height: 100%;
   min-height: 0;
   border: 1px solid rgba(88, 151, 201, 0.24);
   border-radius: 8px;
@@ -3217,8 +3218,9 @@ main {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+  flex: 0 0 auto;
   border-bottom: 1px solid rgba(151, 185, 215, 0.1);
-  padding: 14px;
+  padding: 11px 14px;
   transition:
     border-color 220ms ease,
     background 220ms ease;
@@ -3351,9 +3353,10 @@ main {
 }
 
 .route-intel-block-body {
+  flex: 1 1 auto;
   overflow: auto;
   min-height: 0;
-  padding: 12px 14px;
+  padding: 9px 14px;
   scrollbar-gutter: stable;
   scrollbar-color: rgba(var(--ui-purple-rgb), 0.54) rgba(4, 12, 20, 0.82);
   scrollbar-width: thin;
@@ -3662,7 +3665,7 @@ main {
 
 .route-intel-detail {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   height: 100%;
   min-height: 0;
   align-content: start;
@@ -3672,7 +3675,7 @@ main {
 .route-intel-detail-crossroads {
   align-content: start;
   justify-items: stretch;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   padding: 0;
 }
@@ -3680,7 +3683,7 @@ main {
 .route-intel-detail-gold {
   align-content: start;
   justify-items: stretch;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   padding: 0;
 }
@@ -3688,7 +3691,7 @@ main {
 .route-intel-detail-corruption {
   align-content: start;
   justify-items: stretch;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   padding: 0;
 }
@@ -3705,14 +3708,17 @@ main {
 }
 
 .route-intel-system-head {
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
+  margin-bottom: 4px;
+  text-align: center;
 }
 
 .route-intel-corridor-head {
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
-  text-align: left;
+  margin-bottom: 4px;
+  text-align: center;
 }
 
 .route-intel-system-head strong {
@@ -3783,7 +3789,7 @@ main {
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  min-height: 30px;
+  min-height: 28px;
   border: 1px solid rgba(151, 185, 215, 0.14);
   border-radius: 7px;
   background: rgba(3, 10, 17, 0.48);
@@ -4189,13 +4195,13 @@ main {
 .route-intel-command-metrics {
   display: grid;
   width: 100%;
-  gap: 7px;
+  gap: 6px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .route-intel-command-metrics span {
   justify-content: center;
-  min-height: 32px;
+  min-height: 28px;
   border-color: rgba(137, 196, 236, 0.22);
   background:
     linear-gradient(180deg, rgba(86, 166, 230, 0.09), rgba(3, 10, 17, 0.5)),
@@ -4244,7 +4250,7 @@ main {
 }
 
 .route-intel-corridor-metrics span {
-  min-height: 30px;
+  min-height: 28px;
   padding: 0 8px;
   border-color: rgba(255, 214, 102, 0.24);
   background:
@@ -4329,7 +4335,7 @@ main {
 .route-intel-gate-kill-strip {
   display: grid;
   width: 100%;
-  gap: 7px;
+  gap: 6px;
   grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
 }
 
@@ -4337,13 +4343,13 @@ main {
   display: grid;
   justify-items: center;
   gap: 3px;
-  min-height: 52px;
+  min-height: 46px;
   border: 1px solid rgba(238, 247, 255, 0.48);
   border-radius: 7px;
   background:
     linear-gradient(180deg, rgba(103, 192, 144, 0.095), rgba(3, 10, 17, 0.62)),
     rgba(3, 10, 17, 0.62);
-  padding: 6px 8px;
+  padding: 4px 8px;
   text-align: center;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -4393,15 +4399,15 @@ main {
 }
 
 .route-intel-detail-crossroads > p {
-  justify-self: start;
-  min-height: 22px;
+  justify-self: center;
+  min-height: 18px;
   border: 1px solid rgba(103, 192, 144, 0.44);
   border-radius: 999px;
   background: rgba(103, 192, 144, 0.08);
   color: #d7f5e5;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 4px 10px;
+  padding: 3px 10px;
   font-size: 0.58rem;
   font-weight: 800;
   line-height: 1;
@@ -4410,6 +4416,12 @@ main {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
     0 0 16px rgba(103, 192, 144, 0.055);
+}
+
+.route-intel-detail-corruption > p {
+  justify-self: center;
+  width: min(100%, 720px);
+  text-align: center;
 }
 
 .route-intel-detail-watched > p {

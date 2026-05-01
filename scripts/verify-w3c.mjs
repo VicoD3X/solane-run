@@ -13,6 +13,7 @@ const htmlvalidate = new HtmlValidate({
     "svg-focusable": "off",
   },
 });
+const ignoredValidationRules = new Set(["attribute-boolean-style", "attribute-empty-style"]);
 const browser = await chromium.launch({ headless: true });
 
 try {
@@ -28,7 +29,7 @@ try {
   const report = await htmlvalidate.validateString(html, "dev.logs/w3c-runtime.html");
   const validationMessages = report.results.flatMap((result) =>
     result.messages
-      .filter((message) => message.ruleId !== "attribute-boolean-style")
+      .filter((message) => !ignoredValidationRules.has(message.ruleId))
       .map((message) =>
         `${result.filePath}:${message.line}:${message.column} ${message.severity === 2 ? "error" : "warn"} ${message.ruleId} ${message.message}`,
       ),

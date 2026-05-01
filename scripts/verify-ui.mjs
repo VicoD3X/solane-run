@@ -153,7 +153,7 @@ try {
     await desktop.getByRole("option", { name: /Amarr/i }).click();
     await expect(desktop.getByRole("button", { name: "13,000 m3" })).toBeVisible();
     await expect(desktop.getByRole("button", { name: "60,000 m3" })).toBeVisible();
-    await expect(desktop.getByRole("button", { name: "800,000 m3" })).toBeVisible();
+    await expect(desktop.getByRole("button", { name: "800,000 m3" })).toHaveCount(0);
     await expect(desktop.getByText("Set Pick Up and Destination to unlock cargo sizes.")).toHaveCount(0, { timeout: 2000 });
     await expect(desktop.locator(".contract-packet").getByText("Jita - Amarr")).toBeVisible();
     await expect(desktop.getByText("Road Overview")).toBeVisible();
@@ -193,11 +193,8 @@ try {
     await expect(desktop.getByRole("button", { name: "Copy Rewards" })).toBeVisible();
     await desktop.locator(".speed-toggle").getByRole("button", { name: /Rush/i }).click();
     await expect(desktop.locator(".quote-lock-message")).toHaveCount(0, { timeout: 15000 });
-    await desktop.getByRole("button", { name: "800,000 m3" }).click();
-    await expect(desktop.locator(".contract-packet").getByText("800,000 m3")).toBeVisible();
-    await expect(desktop.getByText("3 500 000 000 ISK")).toBeVisible({ timeout: 15000 });
     await desktop.getByRole("textbox", { name: "Collateral" }).fill("4000000000");
-    await expect(desktop.getByRole("status")).toContainText("Collateral limit exceeded. Maximum allowed is 3,500,000,000 ISK.", { timeout: 15000 });
+    await expect(desktop.getByRole("status")).toHaveCount(0, { timeout: 15000 });
     await desktop.getByRole("textbox", { name: "Collateral" }).fill("200000000");
     await desktop.waitForFunction(() => {
       const text = document.querySelector(".contract-packet")?.textContent ?? "";

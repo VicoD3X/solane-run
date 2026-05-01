@@ -5,6 +5,7 @@ export const MAX_COLLATERAL_VALUE = 5_000_000_000;
 export const LOWSEC_COLLATERAL_VALUE = 3_000_000_000;
 export const POCHVEN_COLLATERAL_VALUE = 3_000_000_000;
 export const HIGHSEC_FREIGHTER_COLLATERAL_VALUE = 3_500_000_000;
+export const FREIGHTER_SERVICE_ENABLED = false;
 
 export type CargoSizeOption = {
   disabled?: boolean;
@@ -25,7 +26,8 @@ export const cargoSizes: CargoSizeOption[] = [
   { label: "800,000 m3", value: "freighter", volume: 800_000 },
 ];
 
-const cargoSizeOrder: CargoSize[] = ["small", "medium", "freighter"];
+const activeCargoSizes = cargoSizes.filter((option) => option.value !== "freighter" || FREIGHTER_SERVICE_ENABLED);
+const cargoSizeOrder: CargoSize[] = activeCargoSizes.map((option) => option.value);
 const cargoSizesByService: Record<ServiceType, CargoSize[]> = {
   HighSec: ["small", "medium", "freighter"],
   LowSec: ["small"],
@@ -57,7 +59,7 @@ export function availableCargoSizesForQuote(
 ): CargoSizeOption[] {
   const allowedSizes = new Set(validation.allowedSizes);
 
-  return cargoSizes.map((option) => ({
+  return activeCargoSizes.map((option) => ({
     ...option,
     disabled: !allowedSizes.has(option.value),
   }));

@@ -15,6 +15,6 @@ solane-run.app, www.solane-run.app {
 
 	handle {
 		header Content-Type "text/plain; charset=utf-8"
-		respond "Solane Run public calculator is offline. Solane API and intel services remain online." 410
+		respond "Solane Run freight service is now closed. PushX, Red Frog, and DSHX are excellent replacement options." 410
 	}
 }

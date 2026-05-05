@@ -175,6 +175,17 @@ cleanup() {
   rm -rf "$LOCK"
 }
 
+wait_for_url() {
+  url="$1"
+  for _ in $(seq 1 30); do
+    if curl -fsS "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  curl -fsS "$url" >/dev/null
+}
+
 if ! mkdir "$LOCK" 2>/dev/null; then
   echo "Another Solane deployment is already running: $LOCK" >&2
   exit 1
@@ -230,12 +241,12 @@ docker compose --env-file "$ENV_FILE" -f infra/docker-compose.yml up -d
 cd "$BASE/caddy"
 docker compose up -d --force-recreate
 
-curl -fsS http://127.0.0.1:8001/health >/dev/null
-curl -fsS https://solane-run.app/api/eve/status >/dev/null
+wait_for_url http://127.0.0.1:8001/health
+wait_for_url https://solane-run.app/api/eve/status
 
 if grep -q 'solane-web' "$BASE/caddy/Caddyfile"; then
-  curl -fsSI http://127.0.0.1:8080 >/dev/null
-  curl -fsSI https://solane-run.app >/dev/null
+  wait_for_url http://127.0.0.1:8080
+  wait_for_url https://solane-run.app
   curl -fsS https://solane-run.app | grep -q 'Solane Run'
 else
   (cd "$BASE/repo/web" && docker compose --env-file "$ENV_FILE" -f infra/docker-compose.yml stop web) || true

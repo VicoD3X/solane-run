@@ -24,8 +24,8 @@ The calculator consumes Solane Engine endpoints:
 
 ## Calculator Rules
 
-- `800,000 m3` is available again for HighSec freight.
-- `800,000 m3` disables Rush speed.
+- Public freight sizes are focused on Solane Run core DST / BR service:
+  `13,000 m3` and `60,000 m3`.
 - Critical non-HighSec pickup/destination systems are selectable, but the rest
   of the calculator is locked with a visible alert.
 - Contract Review is hidden until all freight parameters are filled.

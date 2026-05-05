@@ -18,10 +18,8 @@ The frontend must not call ESI, zKillboard or CCP web directly.
 
 ## Quote Rules
 
-- `allowedSizes` uses `small`, `medium`, `freighter`.
-- `freighter` means `800,000 m3`.
-- `freighter` is available for HighSec normal-speed freight.
-- `freighter + rush` returns `blockedCode: "speed_unavailable"`.
+- `allowedSizes` uses `small` and `medium`.
+- `small` means `13,000 m3`; `medium` means `60,000 m3`.
 - Critical non-HighSec pickup/destination systems return
   `blockedCode: "risk_restricted"` and `risk.isBlocking: true`.
 - Critical HighSec systems remain non-blocking for the calculator.

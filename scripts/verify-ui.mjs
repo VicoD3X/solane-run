@@ -16,14 +16,12 @@ try {
   await expect(desktop.getByRole("heading", { name: "Freight calculator" })).toBeVisible();
   await expect(desktop.getByRole("heading", { name: "Quote parameters" })).toBeVisible();
   await expect(desktop.getByText("DST / BR freight")).toBeVisible();
-  await expect(desktop.getByText("Freighter option")).toBeVisible();
   await expect(desktop.getByText("Contract packet")).toHaveCount(0);
   await expect(desktop.getByText("Route Intel")).toHaveCount(0);
   await expect(desktop.getByText("About")).toHaveCount(0);
   await expect(desktop.getByText(/traffic/i)).toHaveCount(0);
   await expect(desktop.getByRole("button", { name: "13,000 m3" })).toBeDisabled();
   await expect(desktop.getByRole("button", { name: "60,000 m3" })).toBeDisabled();
-  await expect(desktop.getByRole("button", { name: /800,000 m3/ })).toBeDisabled();
 
   if (apiAvailable) {
     await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita");
@@ -32,14 +30,12 @@ try {
     await desktop.getByRole("option", { name: /Amarr/i }).click();
     await expect(desktop.getByRole("button", { name: "13,000 m3" })).toBeEnabled({ timeout: 15000 });
     await expect(desktop.getByRole("button", { name: "60,000 m3" })).toBeEnabled();
-    await expect(desktop.getByRole("button", { name: /800,000 m3/ })).toBeEnabled();
-    await desktop.getByRole("button", { name: /800,000 m3/ }).click();
-    await expect(desktop.getByText("800k runs Normal only.")).toBeVisible();
-    await expect(desktop.locator(".speed-toggle-button")).toBeDisabled();
+    await desktop.getByRole("button", { name: "60,000 m3" }).click();
+    await expect(desktop.locator(".speed-toggle-button")).toBeEnabled();
     await expect(desktop.getByText("Contract packet")).toHaveCount(0);
     await desktop.getByRole("textbox", { name: "Collateral" }).fill("200000000");
     await expect(desktop.getByText("Contract packet")).toBeVisible({ timeout: 15000 });
-    await expect(desktop.locator(".contract-packet").getByText("800,000 m3")).toBeVisible();
+    await expect(desktop.locator(".contract-packet").getByText("60,000 m3")).toBeVisible();
     await expect(desktop.getByRole("button", { name: "Copy Reward" })).toBeVisible({ timeout: 15000 });
   }
 

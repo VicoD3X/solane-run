@@ -56,8 +56,6 @@ function App() {
   const quoteReady = endpointsReady && collateralEntered;
   const quoteSyncing = quoteReady && quote.source === "local" && quote.blockedCode === "pricing_unavailable";
   const cargoSizeOptions = availableCargoSizesForQuote(input, quoteValidation);
-  const coreCargoSizeOptions = cargoSizeOptions.filter((size) => size.value !== "freighter");
-  const freighterCargoSizeOption = cargoSizeOptions.find((size) => size.value === "freighter");
   const collateralValidation = validateCollateral(input, quoteValidation);
   const collateralInvalid = !collateralValidation.valid;
   const blockingRisk = quote.risk?.isBlocking
@@ -66,7 +64,6 @@ function App() {
       ? quoteValidation.risk
       : null;
   const controlsBlockedByRisk = Boolean(blockingRisk);
-  const freighterSelected = input.size === "freighter";
 
   useEffect(() => {
     if (window.location.pathname !== "/") {
@@ -173,7 +170,6 @@ function App() {
           ? {
               ...input,
               size: correctedSize,
-              speed: correctedSize === "freighter" ? "normal" : input.speed,
               volume: volumeForSize(correctedSize),
             }
           : input;
@@ -227,24 +223,20 @@ function App() {
   }, [esiRecoveryKey]);
 
   const normalizeQuoteInput = (nextInput: QuoteInput): QuoteInput => {
-    const normalizedInput = nextInput.size === "freighter"
-      ? { ...nextInput, speed: "normal" as RunSpeed }
-      : nextInput;
-    const nextValidation = fallbackQuoteValidation(normalizedInput);
-    const nextSizeOptions = availableCargoSizesForQuote(normalizedInput, nextValidation);
-    const currentSizeAvailable = nextSizeOptions.some((option) => option.value === normalizedInput.size && !option.disabled);
+    const nextValidation = fallbackQuoteValidation(nextInput);
+    const nextSizeOptions = availableCargoSizesForQuote(nextInput, nextValidation);
+    const currentSizeAvailable = nextSizeOptions.some((option) => option.value === nextInput.size && !option.disabled);
     if (currentSizeAvailable) {
       return {
-        ...normalizedInput,
-        volume: volumeForSize(normalizedInput.size),
+        ...nextInput,
+        volume: volumeForSize(nextInput.size),
       };
     }
 
     const fallbackSize = nextSizeOptions.find((option) => !option.disabled)?.value ?? cargoSizes[0].value;
     return {
-      ...normalizedInput,
+      ...nextInput,
       size: fallbackSize,
-      speed: fallbackSize === "freighter" ? "normal" : normalizedInput.speed,
       volume: volumeForSize(fallbackSize),
     };
   };
@@ -261,7 +253,6 @@ function App() {
     const nextInput = normalizeQuoteInput({
       ...input,
       size,
-      speed: size === "freighter" ? "normal" : input.speed,
       volume: volumeForSize(size),
     });
     const nextValidation = fallbackQuoteValidation(nextInput);
@@ -271,9 +262,6 @@ function App() {
   };
 
   const updateSpeed = (speed: RunSpeed) => {
-    if (freighterSelected && speed === "rush") {
-      return;
-    }
     const nextInput = { ...input, speed };
     const nextValidation = fallbackQuoteValidation(nextInput);
     setInput(nextInput);
@@ -347,33 +335,13 @@ function App() {
                 <SegmentedControl<CargoSize>
                   label="DST / BR freight"
                   onChange={updateSize}
-                  options={coreCargoSizeOptions.map((size) => ({
+                  options={cargoSizeOptions.map((size) => ({
                     disabled: !endpointsReady || controlsBlockedByRisk || size.disabled,
                     label: size.label,
                     value: size.value,
                   }))}
-                  value={!endpointsReady || freighterSelected ? null : input.size}
+                  value={!endpointsReady ? null : input.size}
                 />
-
-                {freighterCargoSizeOption ? (
-                  <fieldset className="freighter-choice">
-                    <legend>Freighter option</legend>
-                    <button
-                      aria-pressed={endpointsReady && freighterSelected}
-                      className="freighter-choice-button"
-                      disabled={!endpointsReady || controlsBlockedByRisk || freighterCargoSizeOption.disabled}
-                      onClick={() => updateSize("freighter")}
-                      type="button"
-                    >
-                      <span>
-                        <strong>{freighterCargoSizeOption.label}</strong>
-                        <small>Occasional capacity</small>
-                      </span>
-                      <em>Normal only</em>
-                    </button>
-                    <p>Secondary service. Normal speed only.</p>
-                  </fieldset>
-                ) : null}
               </div>
 
               <div className="speed-toggle">
@@ -382,7 +350,7 @@ function App() {
                   aria-label={`Speed ${labelForSpeed(input.speed)}`}
                   aria-pressed={input.speed === "rush"}
                   className="speed-toggle-button"
-                  disabled={controlsBlockedByRisk || freighterSelected}
+                  disabled={controlsBlockedByRisk}
                   onClick={toggleRush}
                   type="button"
                 >
@@ -392,7 +360,6 @@ function App() {
                     <span>Rush</span>
                   </span>
                 </button>
-                {freighterSelected ? <small className="control-note">800k runs Normal only.</small> : null}
               </div>
 
               <Input

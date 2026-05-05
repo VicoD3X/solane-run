@@ -654,7 +654,7 @@ function normalizeBlockedCode(value: unknown): QuoteValidation["blockedCode"] {
 }
 
 function isCargoSize(value: unknown): value is CargoSize {
-  return value === "small" || value === "medium" || value === "freighter";
+  return value === "small" || value === "medium";
 }
 
 function normalizeServiceType(value: unknown): SolarSystem["serviceType"] {

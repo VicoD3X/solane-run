@@ -21,7 +21,7 @@ export type QuoteInput = {
   collateral: number;
 };
 
-export type CargoSize = "small" | "medium" | "freighter";
+export type CargoSize = "small" | "medium";
 
 export type RunSpeed = "normal" | "rush";
 

@@ -4,8 +4,6 @@ export const DEFAULT_COLLATERAL_VALUE = 5_000_000_000;
 export const MAX_COLLATERAL_VALUE = 5_000_000_000;
 export const LOWSEC_COLLATERAL_VALUE = 3_000_000_000;
 export const POCHVEN_COLLATERAL_VALUE = 3_000_000_000;
-export const HIGHSEC_FREIGHTER_COLLATERAL_VALUE = 3_500_000_000;
-export const FREIGHTER_SERVICE_ENABLED = true;
 
 export type CargoSizeOption = {
   disabled?: boolean;
@@ -23,13 +21,11 @@ export type CollateralValidation = {
 export const cargoSizes: CargoSizeOption[] = [
   { label: "13,000 m3", value: "small", volume: 13_000 },
   { label: "60,000 m3", value: "medium", volume: 60_000 },
-  { label: "800,000 m3", value: "freighter", volume: 800_000 },
 ];
 
-const activeCargoSizes = cargoSizes.filter((option) => option.value !== "freighter" || FREIGHTER_SERVICE_ENABLED);
-const cargoSizeOrder: CargoSize[] = activeCargoSizes.map((option) => option.value);
+const cargoSizeOrder: CargoSize[] = cargoSizes.map((option) => option.value);
 const cargoSizesByService: Record<ServiceType, CargoSize[]> = {
-  HighSec: ["small", "medium", "freighter"],
+  HighSec: ["small", "medium"],
   LowSec: ["small"],
   NpcNullSec: ["small"],
   Pochven: ["small", "medium"],
@@ -60,7 +56,7 @@ export function availableCargoSizesForQuote(
 ): CargoSizeOption[] {
   const allowedSizes = new Set(validation.allowedSizes);
 
-  return activeCargoSizes.map((option) => ({
+  return cargoSizes.map((option) => ({
     ...option,
     disabled: !allowedSizes.has(option.value),
   }));
@@ -143,7 +139,7 @@ function allowedCargoSizeValues(input: Pick<QuoteInput, "pickup" | "destination"
 function fallbackCollateralLimit(input: Pick<QuoteInput, "pickup" | "destination" | "size">): number {
   const services = selectedServices(input);
   if (services.length === 0) {
-    return input.size === "freighter" ? HIGHSEC_FREIGHTER_COLLATERAL_VALUE : MAX_COLLATERAL_VALUE;
+    return MAX_COLLATERAL_VALUE;
   }
 
   return Math.min(...services.map((service) => fallbackCollateralLimitForService(service, input.size)));
@@ -151,7 +147,7 @@ function fallbackCollateralLimit(input: Pick<QuoteInput, "pickup" | "destination
 
 function fallbackCollateralLimitForService(service: ServiceType, size: CargoSize): number {
   if (size !== "small") {
-    return size === "freighter" ? HIGHSEC_FREIGHTER_COLLATERAL_VALUE : MAX_COLLATERAL_VALUE;
+    return MAX_COLLATERAL_VALUE;
   }
   if (service === "LowSec") {
     return LOWSEC_COLLATERAL_VALUE;

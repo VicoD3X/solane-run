@@ -157,35 +157,35 @@ export function SystemAutocomplete({ label, onChange, placeholder, value }: Syst
             <X size={16} />
           </button>
         ) : null}
-      </div>
 
-      {open && (results.length > 0 || loading) ? (
-        <div className="combobox-menu" id={listId} role="listbox">
-          {loading ? <div className="combobox-state">Scanning systems</div> : null}
-          {results.map((system, index) => (
-            <button
-              aria-selected={index === activeIndex}
-              className={`combobox-option ${index === activeIndex ? "combobox-option-active" : ""}`}
-              id={`${listId}-option-${system.id}`}
-              key={system.id}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => selectSystem(system)}
-              role="option"
-              style={{ "--option-accent": system.color } as CSSProperties}
-              type="button"
-            >
-              <span>
-                <strong>{system.name}</strong>
-                <small>{system.regionName}</small>
-              </span>
-              <span className="combobox-option-meta">
-                <em>{system.serviceType}</em>
-                <b>{system.securityDisplay}</b>
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : null}
+        {open && (results.length > 0 || loading) ? (
+          <div className="combobox-menu" id={listId} role="listbox">
+            {loading ? <div className="combobox-state">Scanning systems</div> : null}
+            {results.map((system, index) => (
+              <button
+                aria-selected={index === activeIndex}
+                className={`combobox-option ${index === activeIndex ? "combobox-option-active" : ""}`}
+                id={`${listId}-option-${system.id}`}
+                key={system.id}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectSystem(system)}
+                role="option"
+                style={{ "--option-accent": system.color } as CSSProperties}
+                type="button"
+              >
+                <span className="combobox-option-main">
+                  <strong>{system.name}</strong>
+                  <small>{system.regionName}</small>
+                </span>
+                <span className="combobox-option-meta">
+                  <em>{system.serviceType}</em>
+                  <b>{system.securityDisplay}</b>
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

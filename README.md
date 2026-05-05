@@ -26,6 +26,8 @@ The calculator consumes Solane Engine endpoints:
 
 - Public freight sizes are focused on Solane Run core DST / BR service:
   `13,000 m3` and `60,000 m3`.
+- Collateral limit is `6B ISK`, except `13,000 m3` LowSec service capped
+  at `4B ISK`.
 - Critical non-HighSec pickup/destination systems are selectable, but the rest
   of the calculator is locked with a visible alert.
 - Contract Review is hidden until all freight parameters are filled.

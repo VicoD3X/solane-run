@@ -20,6 +20,8 @@ The frontend must not call ESI, zKillboard or CCP web directly.
 
 - `allowedSizes` uses `small` and `medium`.
 - `small` means `13,000 m3`; `medium` means `60,000 m3`.
+- `maxCollateral` is `6B ISK`, except `small` LowSec service capped at
+  `4B ISK`.
 - Critical non-HighSec pickup/destination systems return
   `blockedCode: "risk_restricted"` and `risk.isBlocking: true`.
 - Critical HighSec systems remain non-blocking for the calculator.

@@ -378,7 +378,7 @@ function normalizeQuoteValidation(value: unknown): QuoteValidation {
     allowedSizes,
     blockedCode: normalizeBlockedCode(validation.blockedCode),
     blockedReason: typeof validation.blockedReason === "string" ? sanitizeApiText(validation.blockedReason) : null,
-    maxCollateral: sanitizePositiveInteger(validation.maxCollateral, 5_000_000_000),
+    maxCollateral: sanitizePositiveInteger(validation.maxCollateral, 6_000_000_000),
     risk: normalizeRouteRisk(validation.risk),
     selectedSizeValid: Boolean(validation.selectedSizeValid),
     valid: Boolean(validation.valid),

@@ -1,9 +1,8 @@
 import type { CargoSize, QuoteInput, QuotePricing, QuoteResult, QuoteValidation, RouteResult, RunSpeed, ServiceType } from "../types";
 
-export const DEFAULT_COLLATERAL_VALUE = 5_000_000_000;
-export const MAX_COLLATERAL_VALUE = 5_000_000_000;
-export const LOWSEC_COLLATERAL_VALUE = 3_000_000_000;
-export const POCHVEN_COLLATERAL_VALUE = 3_000_000_000;
+export const DEFAULT_COLLATERAL_VALUE = 6_000_000_000;
+export const MAX_COLLATERAL_VALUE = 6_000_000_000;
+export const LOWSEC_COLLATERAL_VALUE = 4_000_000_000;
 
 export type CargoSizeOption = {
   disabled?: boolean;
@@ -151,9 +150,6 @@ function fallbackCollateralLimitForService(service: ServiceType, size: CargoSize
   }
   if (service === "LowSec") {
     return LOWSEC_COLLATERAL_VALUE;
-  }
-  if (service === "Pochven") {
-    return POCHVEN_COLLATERAL_VALUE;
   }
   if (service === "Thera" || service === "Zarzakh") {
     return MAX_COLLATERAL_VALUE;

@@ -1,74 +1,71 @@
 # Solane Run
 
-Solane Run was a beta EVE Online freight calculator. The public calculator is now closed.
+Public EVE Online freight calculator for Solane Run.
 
-The active Solane stack is:
-
-- **Solane API**: private API for EVE Online route, risk, corruption and hauling intel.
-- **Solane Discord bot**: persistent Discord panels powered by Solane API.
-- **Public domain edge**: `solane-run.app` returns a closed-service notice while keeping `/api/*` online.
-
-The beta calculator source has been preserved in the Git branch `legacy-calculator-beta` and tag `legacy-calculator-beta-2026-05-02`.
+The site is calculator-only. It does not ship the former Route Intel cockpit,
+About page, private ESI workflows, saved quotes, contract automation or operator
+tools.
 
 ## Current Public Behavior
 
 ```text
-GET /       -> 410 closed-service message
-GET /api/*  -> proxied to Solane API
+GET /       -> Solane Run freight calculator
+GET /api/*  -> proxied to Solane Engine through the web container
 ```
 
-Public replacement options for freight service users:
+The calculator consumes Solane Engine endpoints:
 
-- PushX
-- Red Frog
-- DSHX
+- `GET /api/eve/status`
+- `GET /api/eve/systems`
+- `GET /api/eve/route`
+- `GET /api/solane/service-window`
+- `POST /api/solane/quote/validate`
+- `POST /api/solane/quote/calculate`
 
-## Repository Role
+## Calculator Rules
 
-This repository now owns only the public edge configuration and project-level documentation. It intentionally does not ship an active frontend application.
+- `800,000 m3` is available again for HighSec freight.
+- `800,000 m3` disables Rush speed.
+- Critical non-HighSec pickup/destination systems are selectable, but the rest
+  of the calculator is locked with a visible alert.
+- Contract Review is hidden until all freight parameters are filled.
+- Traffic flow and route intel are not displayed on the public site.
 
-Kept here:
-
-- proprietary license and public project docs
-- Caddy API-only reverse proxy config
-- VPS edge deploy helper
-- legacy branch/tag pointers
-
-Not kept on `main`:
-
-- React/Vite calculator app
-- Route Intel frontend UI
-- browser smoke tests and web build scripts
-- frontend-facing quote/pricing API contract
-
-## VPS Edge
-
-The production Caddy config lives at:
-
-```text
-infra/caddy/Caddyfile.solane-run
-```
-
-It serves the closure notice on `/` and proxies `/api/*` to the private API container:
-
-```text
-solane-api:8000
-```
-
-Deploy only this edge config when needed:
+## Local Development
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/deploy-vps.ps1
+npm install
+npm run dev:web
 ```
 
-API and bot deployments are handled by their own repositories.
+Set `VITE_API_BASE_URL=http://localhost:8001` for local API development, or
+leave it empty in production so the web container calls same-origin `/api/*`.
+
+## Verification
+
+```powershell
+npm run lint:web
+npm run build:web
+npm run security:web
+npm run w3c:web
+node scripts\verify-ui.mjs
+docker compose -f infra\docker-compose.yml config
+docker compose -f infra\caddy\docker-compose.yml config
+```
+
+## Deploy
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy-vps.ps1
+```
+
+The deploy helper archives this repo and `D:\PROJECT\solane-api`, rebuilds
+Engine before the web frontend, then verifies `https://solane-run.app`.
 
 ## License
 
 Copyright 2026 Victor A. All rights reserved.
 
-This repository is public for visibility, but it is not open source under a permissive license. Copying, redistribution, hosting, modification, or commercial use requires prior written permission.
-
-## Disclaimer
-
-Solane Run is an independent EVE Online logistics/intel project. It is not affiliated with or endorsed by CCP Games.
+This repository is public for visibility, but it is not open source under a
+permissive license. Copying, redistribution, hosting, modification or
+commercial use requires prior written permission.

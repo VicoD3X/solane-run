@@ -8,13 +8,5 @@ solane-run.app, www.solane-run.app {
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 	}
 
-	@api path /api/*
-	handle @api {
-		reverse_proxy solane-api:8000
-	}
-
-	handle {
-		header Content-Type "text/plain; charset=utf-8"
-		respond "Solane Run freight service is now closed. PushX, Red Frog, and DSHX are excellent replacement options." 410
-	}
+	reverse_proxy solane-web:80
 }

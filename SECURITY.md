@@ -1,24 +1,22 @@
 # Security Policy
 
-The public calculator is closed. This repository now contains only public edge configuration and documentation.
+Solane Run is a public calculator frontend. It must not contain runtime secrets,
+EVE SSO credentials, Discord tokens, private ESI refresh tokens or operator
+keys.
 
-Do not add:
+Allowed frontend responsibilities:
 
-- secrets or `.env` values
-- Discord tokens
-- EVE SSO credentials
-- private ESI scopes
-- pricing formulas
-- route-risk formulas
-- contract/order automation
-- frontend calculator code
+- collect freight parameters;
+- call Solane Engine through same-origin `/api/*`;
+- display quote, route jumps and display-safe guardrails.
 
-Sensitive runtime logic belongs in the private `solane-api` service. Discord presentation logic belongs in `solane-discord`.
+Forbidden frontend responsibilities:
 
-Production behavior:
+- duplicate pricing formulas or route-risk logic;
+- expose private ESI, contracts, wallet or operator data;
+- reintroduce Route Intel, About, saved quotes or contract automation surfaces;
+- call ESI, zKillboard or CCP web directly.
 
-- `/` returns a static closed-service notice.
-- `/api/*` is proxied to the private Solane API container.
-- Security headers are applied by Caddy.
-
-To report a vulnerability, open a private GitHub security advisory when available or contact Victor A. through GitHub.
+Production security headers are enforced by the nginx web container and the
+Caddy edge. To report a vulnerability, use a private GitHub security advisory
+or contact Victor A. through GitHub.

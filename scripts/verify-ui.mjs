@@ -24,9 +24,15 @@ try {
   await expect(desktop.getByRole("button", { name: "60,000 m3" })).toBeDisabled();
 
   if (apiAvailable) {
-    await desktop.getByRole("combobox", { name: "Pick Up" }).fill("Jita");
+    const pickupInput = desktop.getByRole("combobox", { name: "Pick Up" });
+    await pickupInput.fill("Jita");
+    await expect(desktop.getByRole("option", { name: /Jita/i }).first()).toBeVisible({ timeout: 15000 });
+    await assertDropdownBelowInput(desktop, pickupInput, "Pick Up");
     await desktop.getByRole("option", { name: /Jita/i }).click();
-    await desktop.getByRole("combobox", { name: "Destination" }).fill("Amarr");
+    const destinationInput = desktop.getByRole("combobox", { name: "Destination" });
+    await destinationInput.fill("Amarr");
+    await expect(desktop.getByRole("option", { name: /Amarr/i }).first()).toBeVisible({ timeout: 15000 });
+    await assertDropdownBelowInput(desktop, destinationInput, "Destination");
     await desktop.getByRole("option", { name: /Amarr/i }).click();
     await expect(desktop.getByRole("button", { name: "13,000 m3" })).toBeEnabled({ timeout: 15000 });
     await expect(desktop.getByRole("button", { name: "60,000 m3" })).toBeEnabled();
@@ -68,5 +74,17 @@ async function assertNoOverflow(page, label) {
   );
   if (horizontalOverflow > 1) {
     throw new Error(`${label} horizontal overflow detected: ${horizontalOverflow}px`);
+  }
+}
+
+async function assertDropdownBelowInput(page, input, label) {
+  const inputBox = await input.boundingBox();
+  const menuBox = await page.locator(".combobox-menu").first().boundingBox();
+  if (!inputBox || !menuBox) {
+    throw new Error(`${label} dropdown geometry unavailable`);
+  }
+  const expectedTop = inputBox.y + inputBox.height;
+  if (menuBox.y < expectedTop - 1) {
+    throw new Error(`${label} dropdown overlaps input: menu y=${menuBox.y}, input bottom=${expectedTop}`);
   }
 }

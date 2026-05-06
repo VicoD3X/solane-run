@@ -119,7 +119,7 @@ try {
       Invoke-External ".venv\Scripts\python.exe" @("-m", "pytest") $apiRepo
       Invoke-External ".venv\Scripts\python.exe" @("-m", "compileall", "-q", "app", "tests") $apiRepo
       Invoke-External ".venv\Scripts\python.exe" @("-m", "pip", "check") $apiRepo
-      Invoke-External "docker" @("compose", "config") $apiRepo
+      Invoke-External "docker" @("compose", "config", "--quiet") $apiRepo
     }
   }
   else {
